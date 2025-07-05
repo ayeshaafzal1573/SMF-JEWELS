@@ -66,8 +66,8 @@ export default function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black">
-        <div className="absolute inset-0 bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover bg-center opacity-20" />
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-black via-gray-600 to-black">
+        <div className="absolute inset-0 bg-[url('/hero-section.png?height=1080&width=1920')] bg-cover bg-center opacity-100" />
 
         {/* Floating Elements */}
         <div className="absolute top-20 left-20 w-4 h-4 bg-gold rounded-full animate-float opacity-60" />
@@ -76,10 +76,10 @@ export default function HomePage() {
 
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <div className="mb-6">
-            <Crown className="h-16 w-16 text-gold mx-auto mb-4 animate-float" />
+             <img src="/butterfly.png" alt="SMF Jewels Logo" className="h-16 text-gold mx-auto mb-4 animate-float" />
           </div>
 
-          <h1 className="font-playfair text-6xl md:text-8xl font-bold mb-6 text-gradient-gold">SMF Jewels</h1>
+          <h1 className="font-playfair text-6xl md:text-8xl font-bold mb-4 text-gradient-gold">SMF Jewels</h1>
 
           <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Discover the finest collection of handcrafted luxury jewelry. Each piece tells a story of elegance,

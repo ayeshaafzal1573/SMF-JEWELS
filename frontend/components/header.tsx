@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, ShoppingCart, Heart, User, Menu, Sun, Moon, Sparkles, Crown } from "lucide-react"
+import { Search, ShoppingCart, Heart, User, Menu, Sun, Moon, Sparkles } from "lucide-react";
 
 export function Header() {
   const { theme, setTheme } = useTheme()
@@ -16,11 +16,11 @@ export function Header() {
   const [wishlistCount] = useState(5)
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <Crown className="h-8 w-8 text-gold" />
+        <Link href="/" className="flex items-center">
+           <img src="/butterfly.png" alt="SMF Jewels Logo" className="h-6" />
           <span className="font-playfair text-2xl font-bold text-gradient-gold">SMF Jewels</span>
         </Link>
 

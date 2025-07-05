@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 :root {
-  --gold: #d4af37;
-  --gold-light: #f4e4bc;
-  --gold-dark: #b8941f;
+  --gold:#E2C355;
+  --gold-light: #004139;
+  /* --gold-light: #f4e4bc; */
+  --gold-dark:#f0d67b;
 }
 
 @layer base {
@@ -81,7 +82,9 @@
 .text-gold {
   color: var(--gold);
 }
-
+.text-green{
+  color: #004139;
+}
 .bg-gold {
   background-color: var(--gold);
 }

@@ -1,18 +1,21 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { JSX, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Crown, User, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
-import { Header } from "@/components/header"
+import { Button } from "@/components/ui/button"
+import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from "lucide-react"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -23,8 +26,8 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   })
+
   const [showPassword, setShowPassword] = useState(false)
-  const [agreeTerms, setAgreeTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,96 +37,112 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match.")
+      return
+    }
+setIsLoading(true)
 
-    // Simulate signup process
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/auth/login")
-    }, 1500)
+try {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signup`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+    }),
+  })
+
+  const data = await res.json()
+
+  if (!res.ok) {
+    throw new Error(data.message || "Signup failed")
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <Header />
+  alert("Signup successful! 🎉")
+  router.push("/auth/login")
+} catch (error: any) {
+  alert(error.message)
+} finally {
+  setIsLoading(false)
+}
 
-      <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-12">
+  }
+
+  const renderInput = (
+    id: string,
+    label: string,
+    type = "text",
+    icon: JSX.Element
+  ) => (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-gold">
+        {label}
+      </Label>
+      <div className="relative">
+        <span className="absolute left-3 top-3">{icon}</span>
+        <Input
+          id={id}
+          name={id}
+          type={type}
+          placeholder={label}
+          value={(formData as any)[id]}
+          onChange={handleChange}
+          className="pl-10 border-gold/40 focus:border-gold focus:ring-gold bg-input/70 text-foreground"
+          required
+        />
+      </div>
+    </div>
+  )
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      style={{ backgroundImage: "url('/signup.png')" }}
+    >
+      <div className="container flex items-center justify-center min-h-[calc(80vh-4rem)] py-2">
         <div className="w-full max-w-md">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <Crown className="h-12 w-12 text-gold" />
-                <motion.div
-                  className="absolute inset-0 bg-gold/20 rounded-full blur-lg"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+          <Card className="bg-white/10 border border-white/30 backdrop-blur-[1px] shadow-2xl rounded-2xl">
+
+              <div className="flex justify-center pt-2">
+                <motion.img
+                  src="/butterfly.png"
+                  alt="SMF Jewels Logo"
+                  className="h-12"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 />
               </div>
-            </div>
 
-            <Card className="border-gold/20 shadow-lg shadow-gold/5">
               <CardHeader className="space-y-1 text-center">
-                <CardTitle className="text-3xl font-bold font-playfair">Create Account</CardTitle>
-                <CardDescription>Enter your information to create an account</CardDescription>
+                <CardTitle className="text-2xl font-playfair text-gold-dark">
+                Signup
+                </CardTitle>
+              
               </CardHeader>
 
               <CardContent>
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="firstName"
-                          name="firstName"
-                          placeholder="John"
-                          value={formData.firstName}
-                          onChange={handleChange}
-                          className="pl-10 border-gold/20 focus:border-gold"
-                          required
-                        />
-                      </div>
-                    </div>
+                <form onSubmit={handleSignup} className="space-y-6">
+                    {renderInput("name", "Name", "text", <User className="h-4 w-4" />)}
+                
 
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="lastName"
-                          name="lastName"
-                          placeholder="Doe"
-                          value={formData.lastName}
-                          onChange={handleChange}
-                          className="pl-10 border-gold/20 focus:border-gold"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  {renderInput("email", "Email", "email", <Mail className="h-4 w-4 " />)}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                  {/* Password */}
+                  <div className="space-y-1">
+                    <Label htmlFor="password" className="text-gold">
+                      Password
+                    </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="pl-10 border-gold/20 focus:border-gold"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 " />
                       <Input
                         id="password"
                         name="password"
@@ -131,29 +150,28 @@ export default function SignupPage() {
                         placeholder="••••••••"
                         value={formData.password}
                         onChange={handleChange}
-                        className="pl-10 border-gold/20 focus:border-gold"
+                        className="pl-10 border-gold/40 focus:border-gold focus:ring-gold bg-input/70 text-foreground"
                         required
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="absolute right-2 top-2"
+                        className="absolute right-2 top-0 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  {/* Confirm Password */}
+                  <div className="space-y-1">
+                    <Label htmlFor="confirmPassword" className="text-gold">
+                      Confirm Password
+                    </Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4" />
                       <Input
                         id="confirmPassword"
                         name="confirmPassword"
@@ -161,59 +179,36 @@ export default function SignupPage() {
                         placeholder="••••••••"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className="pl-10 border-gold/20 focus:border-gold"
+                        className="pl-10 border-gold/40 focus:border-gold focus:ring-gold bg-input/70 text-foreground"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="terms"
-                      checked={agreeTerms}
-                      onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
-                      className="data-[state=checked]:bg-gold data-[state=checked]:border-gold"
-                      required
-                    />
-                    <label
-                      htmlFor="terms"
-                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      I agree to the{" "}
-                      <Link href="/terms" className="text-gold hover:underline">
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link href="/privacy" className="text-gold hover:underline">
-                        Privacy Policy
-                      </Link>
-                    </label>
-                  </div>
-
+                  {/* Submit */}
                   <Button
                     type="submit"
-                    className="w-full bg-gold hover:bg-gold/90 text-black"
-                    disabled={isLoading || !agreeTerms}
+                    className="w-full bg-gold hover:bg-gold/90 text-black font-semibold text-lg py-3"
+                    disabled={isLoading}
                   >
                     {isLoading ? (
                       <div className="flex items-center">
-                        <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                        Creating account...
+                        <div className="h-5 w-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                        Creating Account...
                       </div>
                     ) : (
-                      <div className="flex items-center">
-                        Create Account
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                      <div className="flex items-center justify-center">
+                        Create Account <ArrowRight className="ml-2 h-5 w-5" />
                       </div>
                     )}
                   </Button>
                 </form>
               </CardContent>
 
-              <CardFooter className="flex justify-center">
-                <p className="text-sm text-muted-foreground">
+              <CardFooter className="flex justify-center pt-0">
+                <p className="text-base text-dark">
                   Already have an account?{" "}
-                  <Link href="/auth/login" className="text-gold hover:underline">
+                  <Link href="/auth/login" className="text-gold hover:underline font-semibold">
                     Sign in
                   </Link>
                 </p>
