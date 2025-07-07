@@ -22,38 +22,76 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed")
+      }
+
+      // Store token in localStorage or cookies
+     localStorage.setItem("token", data.access_token) // ✅ Correct
+
+
+      // Assuming your API returns the user's role in the 'data' object
+      // For example, data.user.role or data.role
+      const userRole = data.role // Adjust this based on your API response structure
+
+      alert("Login successful! 🎉")
+
+      // Redirect based on role
+      if (userRole === "admin") {
+        router.push("/admin/dashboard") // Redirect to admin dashboard
+      } else if (userRole === "user") {
+        router.push("/account") // Redirect to main page for regular users
+      }
+      else {
+        router.push("/login") // Default redirect if role is not recognized
+      }
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
       setIsLoading(false)
-      router.push("/account")
-    }, 1500)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <Header />
-
+     <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      style={{ backgroundImage: "url('/signup.png')" }}
+    >
+   
       <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-12">
         <div className="w-full max-w-md">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <Crown className="h-12 w-12 text-gold" />
-                <motion.div
-                  className="absolute inset-0 bg-gold/20 rounded-full blur-lg"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                />
-              </div>
-            </div>
+            <div className="flex justify-center pt-2">
+                          <motion.img
+                            src="/butterfly.png"
+                            alt="SMF Jewels Logo"
+                            className="h-12"
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                        </div>
+     <Card className="bg-white/10 border border-white/30 backdrop-blur-[1px] shadow-2xl rounded-2xl">
 
-            <Card className="border-gold/20 shadow-lg shadow-gold/5">
               <CardHeader className="space-y-1 text-center">
                 <CardTitle className="text-3xl font-bold font-playfair">Sign In</CardTitle>
                 <CardDescription>Enter your email and password to access your account</CardDescription>
@@ -152,15 +190,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8
                   </div>
 
                   <div className="flex gap-2 mt-4">
-                   <Button
-  variant="outline"
-  className="w-full bg-transparent"
-  onClick={() => {
-    console.log("Redirecting to Google OAuth:", `${API_BASE_URL}/auth/google`)
-    window.location.href = `${API_BASE_URL}/auth/google`
-  }}
->
-
+                    <Button
+                      variant="outline"
+                      className="w-full bg-transparent"
+                      onClick={() => {
+                        console.log("Redirecting to Google OAuth:", `${API_BASE_URL}/auth/google`)
+                        window.location.href = `${API_BASE_URL}/auth/google`
+                      }}
+                    >
                       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                         <path
                           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

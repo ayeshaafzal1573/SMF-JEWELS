@@ -41,10 +41,16 @@ async def login(form_data: UserLogin):
     if not user or not verify_password(form_data.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token({
-    "id": str(user["_id"]),   # ✅ Must match your usage in route
-    "email": user["email"],
-    "role": user.get("role", "user")
-})
+    role = user.get("role", "user")  # Default to "user" if role not set
 
-    return {"access_token": token, "token_type": "bearer"}
+    token = create_access_token({
+        "id": str(user["_id"]),
+        "email": user["email"],
+        "role": role
+    })
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": role  # <-- This line is important for frontend logic
+    }

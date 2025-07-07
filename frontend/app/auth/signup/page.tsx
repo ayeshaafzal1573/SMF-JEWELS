@@ -20,8 +20,7 @@ import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from "lucide-react"
 export default function SignupPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
