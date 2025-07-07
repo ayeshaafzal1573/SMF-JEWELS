@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Star, Crown, Gem, Shield, Truck } from "lucide-react"
-
+import { GoogleOAuthProvider } from "@react-oauth/google"
 export default function HomePage() {
   const featuredProducts = [
     {

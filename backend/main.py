@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import auth
-from routes import auth, products,categories,cart,order,wishlist
+from routes import auth, products,categories,cart,order,wishlist,google_oauth
 app = FastAPI()
 
 # Allow frontend requests (Vercel)
 origins = [
     "http://localhost:3000",
-    "https://your-frontend-domain.vercel.app"
+    "https://smf-jewels.vercel.app"
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -23,7 +23,7 @@ app.include_router(categories.router, prefix="/api/category", tags=["Category"])
 app.include_router(cart.router)
 app.include_router(order.router)
 app.include_router(wishlist.router)
-
+app.include_router(google_oauth.router)
 @app.get("/")
 def read_root():
     return {"message": "SMF Jewels Backend Running!"}
