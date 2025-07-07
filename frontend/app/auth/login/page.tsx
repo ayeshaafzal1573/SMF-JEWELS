@@ -78,10 +78,12 @@ export default function LoginPage() {
       style={{ backgroundImage: "url('/signup.png')" }}
     >
    
-      <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-12">
+    <div className="container flex items-center justify-center min-h-[calc(80vh-4rem)] py-2">
         <div className="w-full max-w-md">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex justify-center pt-2">
+          
+     <Card className="bg-white/10 border border-white/30 backdrop-blur-[1px] shadow-2xl rounded-2xl">
+  <div className="flex justify-center pt-2">
                           <motion.img
                             src="/butterfly.png"
                             alt="SMF Jewels Logo"
@@ -90,17 +92,14 @@ export default function LoginPage() {
                             transition={{ duration: 2, repeat: Infinity }}
                           />
                         </div>
-     <Card className="bg-white/10 border border-white/30 backdrop-blur-[1px] shadow-2xl rounded-2xl">
-
               <CardHeader className="space-y-1 text-center">
-                <CardTitle className="text-3xl font-bold font-playfair">Sign In</CardTitle>
-                <CardDescription>Enter your email and password to access your account</CardDescription>
+               <CardTitle className="text-2xl font-playfair text-gold-dark">Sign In</CardTitle>
               </CardHeader>
 
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-gold-dark">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -117,7 +116,7 @@ export default function LoginPage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="password" className="text-gold-dark">Password</Label>
                       <Link href="/auth/forgot-password" className="text-xs text-gold hover:underline">
                         Forgot password?
                       </Link>
@@ -137,7 +136,7 @@ export default function LoginPage() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="absolute right-2 top-2"
+                        className="absolute right-2 top-0"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -158,7 +157,7 @@ export default function LoginPage() {
                     />
                     <label
                       htmlFor="remember"
-                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="text-sm text-gold-dark leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                       Remember me for 30 days
                     </label>
@@ -218,18 +217,13 @@ export default function LoginPage() {
                       </svg>
                       Google
                     </Button>
-                    <Button variant="outline" className="w-full bg-transparent">
-                      <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
-                      </svg>
-                      Facebook
-                    </Button>
+                  
                   </div>
                 </div>
               </CardContent>
 
               <CardFooter className="flex justify-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm">
                   Don&apos;t have an account?{" "}
                   <Link href="/auth/signup" className="text-gold hover:underline">
                     Sign up
