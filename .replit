@@ -1,5 +1,4 @@
-modules = ["nodejs-20", "python-3.12", "web"]
-
+  modules = ["nodejs-20", "python-3.12", "web", "nix"]
 run = "cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port 8000"
 
 [nix]
@@ -7,7 +6,7 @@ channel = "stable-24_05"
 packages = ["libxcrypt"]
 
 [deployment]
-run = "cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port 8000"
+run = ["sh", "-c", "cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port 8000"]
 
 [[ports]]
 localPort = 8000
