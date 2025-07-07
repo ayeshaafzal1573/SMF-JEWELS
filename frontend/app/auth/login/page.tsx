@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -151,7 +152,15 @@ export default function LoginPage() {
                   </div>
 
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" className="w-full bg-transparent" onClick={() => window.location.href = process.env.NEXT_PUBLIC_API_BASE_URL + "auth/google"}>
+                   <Button
+  variant="outline"
+  className="w-full bg-transparent"
+  onClick={() => {
+    console.log("Redirecting to Google OAuth:", `${API_BASE_URL}/auth/google`)
+    window.location.href = `${API_BASE_URL}/auth/google`
+  }}
+>
+
                       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                         <path
                           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
