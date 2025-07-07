@@ -9,6 +9,8 @@
     pkgs.python312Packages.email_validator
     pkgs.python312Packages.passlib 
     pkgs.python312Packages.python-jose
+    pkgs.python312Packages.authlib
+    
 
   ];
 }
