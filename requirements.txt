@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-python-dotenv
-motor
-pydantic
-passlib[bcrypt]
-python-jose[cryptography]
-authlib
-routes
