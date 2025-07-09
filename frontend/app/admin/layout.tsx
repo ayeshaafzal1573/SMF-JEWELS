@@ -21,6 +21,7 @@ import {
   BarChart3,
   PlusCircle,
   Sparkles,
+  ShoppingBag,
 } from "lucide-react"
 
 interface AdminLayoutProps {
@@ -38,6 +39,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: <LayoutDashboard className="h-5 w-5" />,
       current: pathname === "/admin/dashboard",
     },
+     {
+      name: "Categories",
+      href: "/admin/categories",
+      icon: <ShoppingBag className="h-5 w-5" />,
+      current: pathname === "/admin/categories",
+    },
     {
       name: "Products",
       href: "/admin/products",
@@ -45,8 +52,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       current: pathname?.startsWith("/admin/products"),
       children: [
         { name: "All Products", href: "/admin/products" },
-        { name: "Add New", href: "/admin/products/new" },
-        { name: "Categories", href: "/admin/products/categories" },
+        { name: "Add New", href: "/admin/products/new" }
       ],
     },
     {
