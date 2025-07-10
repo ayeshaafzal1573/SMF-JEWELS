@@ -234,7 +234,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       description: "Product created successfully!",
     });
     
-    router.push("/admin/products/all");
+    router.push("/admin/products");
   } catch (err: any) {
     console.error("Submission error:", err);
     toast({

@@ -8,3 +8,7 @@ python-jose[cryptography]
 python-jose
 authlib
 httpx
+cloudinary
+python-multipart
+openai
+google-generativeai

@@ -121,13 +121,32 @@ async def delete(product_id: str, user=Depends(is_admin)):
 
 
 
-# ✅ GET /products — View all products (Public)
-@router.get("/all", response_model=List[ProductResponse])
+@router.get("/all")
 async def list_products():
-    products = await get_all_products()
-    return [product_helper(product) for product in products] 
-# ✅ GET /products/{product_id} — View single product by ID (Public)
-@router.get("/products/{product_id}", response_model=ProductResponse)
+    products = await db.products.find().to_list(length=None)
+
+    formatted_products = []
+
+    for product in products:
+        if "_id" not in product:
+            print("⚠️ Skipped product (missing _id):", product)
+            continue
+
+        # Replace category ID with full category object
+        category_id = product.get("category")
+        if category_id:
+            try:
+                category = await db.categories.find_one({"_id": ObjectId(category_id)})
+                if category:
+                    product["category"] = category
+            except Exception as e:
+                print("⚠️ Failed to fetch category:", e)
+
+        formatted_products.append(product_helper(product))
+
+    return formatted_products
+
+@router.get("/{product_id}", response_model=ProductResponse)
 async def view_product(product_id: str):
     product = await get_product_by_id(product_id)
     if not product:

@@ -51,11 +51,11 @@ export default function ProductsPage() {
           'Content-Type': 'application/json',
         }
       })
-      
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
-      
+
       const data = await res.json()
       return Array.isArray(data) ? data : []
     } catch (err) {
@@ -68,11 +68,11 @@ export default function ProductsPage() {
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/category/all-categories`
       const res = await fetch(apiUrl)
-      
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
-      
+
       return await res.json()
     } catch (err) {
       console.error("Error fetching categories:", err)
@@ -93,7 +93,7 @@ export default function ProductsPage() {
       const mappedProducts = productData.map((product: any) => {
         // Handle ID - prefer _id if available (MongoDB)
         const id = product._id || product.id || `temp-${Math.random().toString(36).substr(2, 9)}`
-        
+
         // Handle category - it might be an object or just an ID string
         let category: Category
         if (typeof product.category === 'string') {
@@ -117,9 +117,9 @@ export default function ProductsPage() {
           price: product.price || 0,
           category,
           stock: product.stock || 0,
-          status: 
+          status:
             product.stock === 0 ? "Out of Stock" :
-            product.stock < 5 ? "Low Stock" : "In Stock",
+              product.stock < 5 ? "Low Stock" : "In Stock",
           featured: product.featured || false,
           images: product.images || []
         }
@@ -151,7 +151,7 @@ export default function ProductsPage() {
 
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return
-    
+
     try {
       const token = localStorage.getItem("token") || ""
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/delete-product/${productId}`, {
@@ -161,17 +161,17 @@ export default function ProductsPage() {
           'Content-Type': 'application/json'
         }
       })
-      
+
       if (!res.ok) {
         const errorData = await res.json()
         throw new Error(errorData.detail || "Failed to delete product")
       }
-      
+
       toast({
         title: "Success",
         description: "Product deleted successfully"
       })
-      
+
       // Optimistic update
       setProducts(prev => prev.filter(p => p.id !== productId))
     } catch (err) {
@@ -187,8 +187,8 @@ export default function ProductsPage() {
     const matchesSearch =
       product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
       product.id.toLowerCase().includes(debouncedQuery.toLowerCase())
-    const matchesCategory = 
-      selectedCategory === "all" || 
+    const matchesCategory =
+      selectedCategory === "all" ||
       product.category?.id === selectedCategory
 
     return matchesSearch && matchesCategory
@@ -220,7 +220,7 @@ export default function ProductsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">ID</TableHead>
+
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead className="text-right">Price</TableHead>
@@ -244,9 +244,7 @@ export default function ProductsPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
-                      <TableCell className="font-medium">
-                        {product.id?.substring(0, 8) || 'N/A'}
-                      </TableCell>
+
                       <TableCell>
                         <div className="font-medium">{product.name}</div>
                         {product.featured && (
@@ -260,8 +258,8 @@ export default function ProductsPage() {
                         <div
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                           ${product.status === "In Stock" ? "bg-green-100 text-green-800" :
-                            product.status === "Low Stock" ? "bg-yellow-100 text-yellow-800" :
-                            "bg-red-100 text-red-800"}`}
+                              product.status === "Low Stock" ? "bg-yellow-100 text-yellow-800" :
+                                "bg-red-100 text-red-800"}`}
                         >
                           {product.status}
                         </div>
@@ -278,12 +276,12 @@ export default function ProductsPage() {
                               <Eye className="mr-2 h-4 w-4" />
                               View
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/admin/products/edit/${product.id}`)}>
+                            <DropdownMenuItem onClick={() => router.push(`/admin/products/edit?id=${product.id}`)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="text-red-600" 
+                            <DropdownMenuItem
+                              className="text-red-600"
                               onClick={() => handleDelete(product.id)}
                             >
                               <Trash className="mr-2 h-4 w-4" />
@@ -301,7 +299,7 @@ export default function ProductsPage() {
         </CardContent>
       </Card>
 
-       <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Showing <strong>{filteredProducts.length}</strong> of <strong>{products.length}</strong> products
         </p>

@@ -1,37 +1,29 @@
-from bson import ObjectId
-
 def product_helper(product) -> dict:
-    # Handle category data - it might be:
-    # 1. An object with _id and name
-    # 2. Just the category ID string
-    # 3. A CategoryInfo object
-    # 4. Missing entirely
-    
+    product_id = product.get("_id")
+    if not product_id:
+        raise ValueError("Missing '_id' in product")
+
     category_data = product.get("category")
-    
+
     if isinstance(category_data, dict):
-        # Case 1: Category is an object with _id and name
         category = {
             "id": str(category_data.get("_id", "")),
             "name": category_data.get("name", "Uncategorized"),
             "slug": category_data.get("slug")
         }
     elif isinstance(category_data, str):
-        # Case 2: Category is just an ID string
         category = {
             "id": category_data,
             "name": "Uncategorized",
             "slug": None
         }
-    elif hasattr(category_data, "dict"):  # For Pydantic models
-        # Case 3: Category is a CategoryInfo object
+    elif hasattr(category_data, "dict"):
         category = {
             "id": str(category_data.id),
             "name": category_data.name,
             "slug": category_data.slug
         }
     else:
-        # Case 4: Missing category
         category = {
             "id": "",
             "name": "Uncategorized",
@@ -39,7 +31,7 @@ def product_helper(product) -> dict:
         }
 
     return {
-        "id": str(product["_id"]),
+        "id": str(product_id),  # ✅ Safe now
         "name": product["name"],
         "price": product["price"],
         "category": category,

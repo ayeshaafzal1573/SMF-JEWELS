@@ -8,7 +8,7 @@ async def create_product(data):
     data["created_at"] = datetime.utcnow()
     result = await db.products.insert_one(data)
     new_product = await db.products.find_one({"_id": result.inserted_id})
-    return await product_helper(new_product)
+    return product_helper(new_product) 
 
 # ✅ Update Product
 async def update_product(product_id: str, data: dict):
@@ -34,9 +34,24 @@ async def delete_product(product_id: str):
 
 # ✅ Get All Products
 async def get_all_products():
-    return await db.products.find().to_list(length=100)
+    products = await db.products.find().to_list(length=None)
 
-# ✅ Get Product by ID
+    final_products = []
+    for product in products:
+        # Inject full category data
+        category_id = product.get("category")
+        if category_id:
+            category = await db.categories.find_one({"_id": ObjectId(category_id)})
+            if category:
+                product["category"] = category
+
+        # Defensive check before formatting
+        if "_id" in product:
+            final_products.append(product_helper(product))
+        else:
+            print("⚠ Skipped product without _id:", product)
+
+    return final_products
 async def get_product_by_id(product_id: str):
     if not ObjectId.is_valid(product_id):
         return None

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import auth
-from routes import auth, products,categories,cart,order,wishlist,google_oauth
+from routes import auth, products,categories,cart,order,wishlist,google_oauth,ai
 app = FastAPI()
 
 # Allow frontend requests (Vercel)
@@ -23,6 +23,7 @@ app.include_router(cart.router)
 app.include_router(order.router)
 app.include_router(wishlist.router)
 app.include_router(google_oauth.router)
+app.include_router(ai.router, prefix="/api/ai")
 @app.get("/")
 def read_root():
     return {"message": "SMF Jewels Backend Running!"}
