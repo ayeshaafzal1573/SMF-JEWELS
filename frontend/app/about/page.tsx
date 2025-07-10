@@ -73,11 +73,11 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className="min-h-screen bg-white overflow-x-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
       <Header cartCount={cartCount} wishlistCount={wishlistCount} />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-br from-[#111111] via-gray-900 to-[#111111] text-white">
+      <section className="pt-32 pb-20  bg-cover bg-center from-[#111111] via-gray-900 to-[#111111] text-white bg-[url('/contact.png?height=800&width=1600')]">
         <div className="container mx-auto px-4">
           <motion.div
             className="text-center max-w-4xl mx-auto"

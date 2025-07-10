@@ -86,35 +86,52 @@ export default function NewProductPage() {
   }
 
 
-  const handleGenerateDescription = () => {
+const handleGenerateDescription = async () => {
     if (!productData.name) {
-      toast({
-        title: "Error",
-        description: "Please enter a product name first",
-        variant: "destructive",
-      })
-      return
+        toast({
+            title: "Error",
+            description: "Please enter a product name first",
+            variant: "destructive",
+        })
+        return
     }
 
     setIsGenerating(true)
+    try {
+        const token = localStorage.getItem("token") || ""
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ai/generate-description`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                productName: productData.name,
+                category: categories.find(c => c.id === productData.category)?.name || "jewelry"
+            })
+        })
 
-    setTimeout(() => {
-      const luxuryDescriptions = [
-        `Introducing the exquisite ${productData.name}, a testament to unparalleled craftsmanship and timeless elegance.`,
-        `The magnificent ${productData.name} represents the pinnacle of luxury jewelry design.`,
-        `Discover the allure of the ${productData.name}, where artistry meets innovation.`
-      ]
+        if (!response.ok) {
+            throw new Error("Failed to generate description")
+        }
 
-      const randomDescription = luxuryDescriptions[Math.floor(Math.random() * luxuryDescriptions.length)]
-      setProductData(prev => ({ ...prev, description: randomDescription }))
-      setIsGenerating(false)
-      
-      toast({
-        title: "Success",
-        description: "AI description generated successfully",
-      })
-    }, 2000)
-  }
+        const { description } = await response.json()
+        setProductData(prev => ({ ...prev, description }))
+
+        toast({ 
+            title: "Success", 
+            description: "AI description generated successfully" 
+        })
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "Failed to generate description",
+            variant: "destructive",
+        })
+    } finally {
+        setIsGenerating(false)
+    }
+}
 
   // This is the missing handler that was causing the error
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -247,25 +264,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
 
-// Separate function to handle image uploads
-const uploadImages = async (images: File[], token: string): Promise<string[]> => {
-  const formData = new FormData();
-  images.forEach(file => formData.append("files", file));
-
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`, {
-    method: "POST",
-    body: formData,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to upload images");
-  }
-
-  return await response.json();
-};
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

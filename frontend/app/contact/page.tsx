@@ -96,9 +96,9 @@ export default function ContactPage() {
       <Header cartCount={cartCount} wishlistCount={wishlistCount} />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-br from-[#111111] via-gray-900 to-[#111111] text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 bg-[url('/placeholder.svg?height=800&width=1600')] bg-cover bg-center"></div>
+       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-black via-gray-600 to-black">
+        <div className="absolute inset-0 opacity-100">
+          <div className="absolute inset-0 bg-[url('/about.png?height=800&width=1600')] bg-cover bg-center"></div>
         </div>
 
         <div className="container mx-auto px-4 relative z-10">

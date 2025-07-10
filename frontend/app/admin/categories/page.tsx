@@ -45,7 +45,7 @@ export default function CategoryPage() {
   const fetchCategories = async () => {
     setLoading(true)
     try {
-      const token = getAuthToken()
+   
       const headers: HeadersInit = {
         "Content-Type": "application/json",
       }

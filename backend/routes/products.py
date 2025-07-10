@@ -8,6 +8,7 @@ from bson import ObjectId
 from typing import List, Optional
 from core.database import db
 from models.product_model import product_helper
+from models.category_model import get_category_by_id 
 from core.deps import is_admin
 from core.cloudinary_config import cloudinary
 
@@ -59,7 +60,6 @@ async def add_product(
     new_product = await create_product(product_data)
     return new_product
 
-
 @router.put("/update-product/{product_id}", response_model=ProductResponse)
 async def update_product_route(
     product_id: str,
@@ -73,14 +73,14 @@ async def update_product_route(
     weight: str = Form(""),
     dimensions: str = Form(""),
     featured: bool = Form(False),
-    existing_images: Optional[str] = Form(""),  # Comma-separated URLs
+    existing_images: Optional[str] = Form(""),
     images: Optional[List[UploadFile]] = File(None),
     user=Depends(is_admin)
 ):
     # Parse existing image URLs
     image_urls = [url for url in existing_images.split(",") if url.strip()]
 
-    # Upload new images if any
+    # Upload new images to Cloudinary
     if images:
         for image in images:
             try:
@@ -89,7 +89,7 @@ async def update_product_route(
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
 
-    # Build updated data
+    # Update the product
     updated_data = {
         "name": name,
         "price": price,
@@ -105,11 +105,20 @@ async def update_product_route(
     }
 
     updated = await update_product(product_id, updated_data)
+
     if not updated:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    return updated
+    # 🔁 Re-fetch the updated product to include full category object
+    updated_product = await get_product_by_id(product_id)
+    if not updated_product:
+        raise HTTPException(status_code=404, detail="Failed to fetch updated product")
 
+    # 🔍 Replace category ID with full category object
+    category_obj = await get_category_by_id(updated_product["category"])
+    updated_product["category"] = category_obj
+
+    return updated_product
 
 # ✅ DELETE /products/{id} 
 @router.delete("/delete-product/{product_id}")

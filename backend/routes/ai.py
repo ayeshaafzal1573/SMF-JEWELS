@@ -20,7 +20,9 @@ async def generate_description(data: DescriptionRequest, user=Depends(is_admin))
 
         genai.configure(api_key=api_key)
 
-        model = genai.GenerativeModel("gemini-pro")
+        # *** CHANGE THIS LINE ***
+        model = genai.GenerativeModel("gemini-1.5-flash-latest") 
+        # **********************
 
         prompt = (
             f"Write a compelling and elegant product description for a {data.category} product "
@@ -34,4 +36,6 @@ async def generate_description(data: DescriptionRequest, user=Depends(is_admin))
         return {"description": description}
 
     except Exception as e:
+        # Add more specific logging for debugging
+        print(f"AI generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"AI generation failed: {str(e)}")

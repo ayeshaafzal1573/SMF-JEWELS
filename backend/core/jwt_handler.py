@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 import os
 from dotenv import load_dotenv
-
+from core.database import db 
 load_dotenv()
 
 SECRET_KEY = os.getenv("JWT_SECRET")
@@ -33,3 +33,6 @@ def verify_access_token(token: str):
         return payload
     except JWTError:
         return None
+async def is_token_blacklisted(token: str) -> bool:
+    exists = await db.blacklisted_tokens.find_one({"token": token})
+    return exists is not None

@@ -89,15 +89,10 @@ export default function ProductsPage() {
         fetchCategories()
       ])
 
-      // Transform product data to ensure consistent structure
       const mappedProducts = productData.map((product: any) => {
-        // Handle ID - prefer _id if available (MongoDB)
         const id = product._id || product.id || `temp-${Math.random().toString(36).substr(2, 9)}`
-
-        // Handle category - it might be an object or just an ID string
         let category: Category
         if (typeof product.category === 'string') {
-          // If category is just an ID string, find the full category object
           const foundCategory = categoryData.find((c: Category) => c.id === product.category || c._id === product.category)
           category = foundCategory || { id: product.category, name: 'Uncategorized' }
         } else if (product.category && typeof product.category === 'object') {
@@ -144,10 +139,7 @@ export default function ProductsPage() {
     loadData()
   }, [loadData])
 
-  const handleRefresh = () => {
-    setRefreshing(true)
-    loadData()
-  }
+
 
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return
@@ -246,13 +238,14 @@ export default function ProductsPage() {
                     >
 
                       <TableCell>
-                        <div className="font-medium">{product.name}</div>
+                        <div className="font-medium"><img src={product.images[0]} alt="Current" className="w-10 h-10 object-cover rounded-md" />{product.name}</div>
                         {product.featured && (
                           <span className="text-xs text-gold">Featured</span>
                         )}
                       </TableCell>
+                   
                       <TableCell>{product.category?.name || 'Uncategorized'}</TableCell>
-                      <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{product.price.toFixed(2)}</TableCell>
                       <TableCell className="text-center">{product.stock}</TableCell>
                       <TableCell className="text-center">
                         <div

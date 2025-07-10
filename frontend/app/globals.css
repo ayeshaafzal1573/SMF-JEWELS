@@ -3,67 +3,70 @@
 @tailwind utilities;
 
 :root {
-  --gold:#E2C355;
-  --gold-light: #004139;
-  /* --gold-light: #f4e4bc; */
-  --gold-dark:#f0d67b;
+  /* Light theme default gold colors */
+  --gold: #D4AF37; /* Consistent primary gold */
+  --gold-light: #f4e4bc; /* Lighter shade for gradients/accents */
+  --gold-dark: #f0d67b; /* Slightly darker for deeper gold */
+
+  /* Shadcn UI light theme variables */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%; /* This is usually a dark gray/black */
+  --primary-foreground: 210 40% 98%; /* White/off-white */
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
+.dark {
+  /* Dark theme gold colors - Adjust these if you want a different gold shade in dark mode */
+  --gold: #FFD700; /* A brighter, more distinct gold for dark mode */
+  --gold-light: #FFEA90; /* Adjusted light gold for dark mode */
+  --gold-dark: #B8860B; /* Adjusted dark gold for dark mode */
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
+  /* Shadcn UI dark theme variables */
+  --background: 222.2 84% 4.9%; /* Dark background */
+  --foreground: 210 40% 98%; /* Light text */
+  --card: 222.2 84% 4.9%; /* Dark card background */
+  --card-foreground: 210 40% 98%; /* Light card text */
+  --popover: 222.2 84% 4.9%; /* Dark popover background */
+  --popover-foreground: 210 40% 98%; /* Light popover text */
+  --primary: 210 40% 98%; /* This will be your light text on dark backgrounds */
+  --primary-foreground: 222.2 47.4% 11.2%; /* This will be your dark text on light backgrounds (e.g., primary button text) */
+  --secondary: 217.2 32.6% 17.5%; /* A slightly lighter dark for secondary elements */
+  --secondary-foreground: 210 40% 98%; /* Light text on secondary elements */
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
 }
 
 @layer base {
@@ -79,26 +82,36 @@
   font-family: var(--font-playfair);
 }
 
-.text-gold {
-  color: var(--gold);
+/* Custom Gold Colors & Gradients - Ensure these also adapt */
+.text-[#D4AF37] {
+    color: var(--gold);
 }
-.text-green{
-  color: #004139;
+.bg-[#D4AF37] {
+    background-color: var(--gold);
 }
-.bg-gold {
-  background-color: var(--gold);
+.border-[#D4AF37] {
+    border-color: var(--gold);
+}
+.fill-[#D4AF37] {
+    fill: var(--gold);
 }
 
-.border-gold {
-  border-color: var(--gold);
+/* For your specific gradients, you might want to define dark mode versions too */
+.bg-gradient-to-r.from-[#111111].to-gray-800 {
+  background: linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+}
+
+.dark .hover\:from-[#D4AF37].hover\:to-yellow-600:hover {
+    background: linear-gradient(to right, var(--gold) 0%, var(--gold-light) 100%);
+}
+
+/* Existing custom classes */
+.text-green {
+  color: #004139;
 }
 
 .hover\:bg-gold\/90:hover {
   background-color: rgb(212 175 55 / 0.9);
-}
-
-.fill-gold {
-  fill: var(--gold);
 }
 
 .animate-float {

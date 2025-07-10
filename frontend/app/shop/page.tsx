@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,100 +12,160 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import Link from "next/link"
-import { Grid3X3, List, Heart, Star, ShoppingCart, Search, SlidersHorizontal } from "lucide-react"
+import { Grid3X3, List, Heart, Star, ShoppingCart, Search, SlidersHorizontal, Loader2 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+
+// Define Product type based on your API response mapping
+interface Product {
+  id: string
+  name: string
+  price: number
+  originalPrice?: number
+  image: string
+  rating: number
+  reviews: number
+  category: string
+  isNew?: boolean
+  isSale?: boolean
+  isBestseller?: boolean
+  isLimited?: boolean
+}
 
 export default function ShopPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [priceRange, setPriceRange] = useState([0, 10000])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([])
   const [sortBy, setSortBy] = useState("featured")
 
-  const products = [
-    {
-      id: 1,
-      name: "Diamond Solitaire Ring",
-      price: 3299,
-      originalPrice: 3999,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 5,
-      reviews: 124,
-      category: "Rings",
-      material: "Diamond",
-      isNew: true,
-      isSale: true,
-    },
-    {
-      id: 2,
-      name: "Pearl Drop Earrings",
-      price: 899,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 4.8,
-      reviews: 89,
-      category: "Earrings",
-      material: "Pearl",
-      isBestseller: true,
-    },
-    {
-      id: 3,
-      name: "Gold Tennis Bracelet",
-      price: 2199,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 4.9,
-      reviews: 156,
-      category: "Bracelets",
-      material: "Gold",
-      isLimited: true,
-    },
-    {
-      id: 4,
-      name: "Sapphire Pendant Necklace",
-      price: 1799,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 4.7,
-      reviews: 67,
-      category: "Necklaces",
-      material: "Sapphire",
-    },
-    {
-      id: 5,
-      name: "Emerald Stud Earrings",
-      price: 2899,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 5,
-      reviews: 203,
-      category: "Earrings",
-      material: "Emerald",
-      isNew: true,
-    },
-    {
-      id: 6,
-      name: "Platinum Wedding Band",
-      price: 1299,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 4.9,
-      reviews: 178,
-      category: "Rings",
-      material: "Platinum",
-    },
-  ]
+  const [products, setProducts] = useState<Product[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
+  const [productError, setProductError] = useState<string | null>(null)
 
-  const categories = ["Rings", "Necklaces", "Earrings", "Bracelets", "Watches"]
-  const materials = ["Diamond", "Gold", "Silver", "Platinum", "Pearl", "Sapphire", "Emerald", "Ruby"]
+  const [categories, setCategories] = useState<string[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
+  const [categoryError, setCategoryError] = useState<string | null>(null)
+
+  const { toast } = useToast()
+
+  // --- Fetch Products from API ---
+  const fetchProducts = useCallback(async () => {
+    setLoadingProducts(true)
+    setProductError(null)
+    try {
+      const queryParams = new URLSearchParams()
+      queryParams.append("minPrice", priceRange[0].toString())
+      queryParams.append("maxPrice", priceRange[1].toString())
+
+      // **THIS IS THE CRUCIAL PART:** Add selected categories to query params
+      if (selectedCategories.length > 0) {
+        // Assuming your backend expects categories as a comma-separated string
+        queryParams.append("categories", selectedCategories.join(","))
+      }
+
+      queryParams.append("sortBy", sortBy)
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/all?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        }
+      )
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch products: ${res.statusText}`)
+      }
+      const data = await res.json()
+
+      const mappedProducts: Product[] = Array.isArray(data)
+        ? data.map((prod: any) => ({
+            id: prod._id || prod.id,
+            name: prod.name || "Unknown Product",
+            price: prod.price || 0,
+            category: prod.category, // Ensure your backend returns the category for each product
+            image:
+              prod.images && Array.isArray(prod.images) && prod.images.length > 0
+                ? prod.images[0]
+                : "/placeholder.svg",
+            rating: prod.rating || 4.5,
+            reviews: prod.reviews || Math.floor(Math.random() * 500) + 50,
+            originalPrice: prod.originalPrice || undefined,
+            isNew: prod.isNew || false,
+            isSale: prod.isSale || false,
+            isBestseller: prod.isBestseller || false,
+            isLimited: prod.isLimited || false,
+          }))
+        : []
+
+      setProducts(mappedProducts)
+    } catch (err: any) {
+      console.error("Error fetching products:", err)
+      setProductError(err.message || "Failed to load products.")
+      setProducts([])
+      toast({
+        title: "Error",
+        description: "Failed to load products.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingProducts(false)
+    }
+  }, [priceRange, selectedCategories, sortBy, toast]) // Dependencies now correctly include selectedCategories
+
+  // --- Fetch Categories from API ---
+  const fetchCategories = useCallback(async () => {
+    setLoadingCategories(true)
+    setCategoryError(null)
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/category/all-categories`, // Your categories API endpoint
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        }
+      )
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch categories: ${res.statusText}`)
+      }
+      const data = await res.json()
+
+      const fetchedCategoryNames: string[] = Array.isArray(data)
+        ? data
+            .map((cat: any) => (typeof cat === "string" ? cat : cat.name))
+            .filter(Boolean)
+        : []
+      setCategories(fetchedCategoryNames)
+    } catch (err: any) {
+      console.error("Error fetching categories:", err)
+      setCategoryError(err.message || "Failed to load categories.")
+      setCategories([])
+      toast({
+        title: "Error",
+        description: "Failed to load categories.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingCategories(false)
+    }
+  }, [toast])
+
+  // --- useEffects to trigger fetches ---
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts]) // `fetchProducts` now correctly depends on `selectedCategories`
+
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
 
   const handleCategoryChange = (category: string, checked: boolean) => {
     if (checked) {
-      setSelectedCategories([...selectedCategories, category])
+      setSelectedCategories((prev) => [...prev, category])
     } else {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category))
-    }
-  }
-
-  const handleMaterialChange = (material: string, checked: boolean) => {
-    if (checked) {
-      setSelectedMaterials([...selectedMaterials, material])
-    } else {
-      setSelectedMaterials(selectedMaterials.filter((m) => m !== material))
+      setSelectedCategories((prev) => prev.filter((c) => c !== category))
     }
   }
 
@@ -114,7 +174,13 @@ export default function ShopPage() {
       {/* Price Range */}
       <div>
         <Label className="text-base font-semibold mb-4 block">Price Range</Label>
-        <Slider value={priceRange} onValueChange={setPriceRange} max={10000} step={100} className="mb-4" />
+        <Slider
+          value={priceRange}
+          onValueChange={setPriceRange}
+          max={10000}
+          step={100}
+          className="mb-4"
+        />
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>${priceRange[0]}</span>
           <span>${priceRange[1]}</span>
@@ -124,39 +190,33 @@ export default function ShopPage() {
       {/* Categories */}
       <div>
         <Label className="text-base font-semibold mb-4 block">Categories</Label>
-        <div className="space-y-3">
-          {categories.map((category) => (
-            <div key={category} className="flex items-center space-x-2">
-              <Checkbox
-                id={category}
-                checked={selectedCategories.includes(category)}
-                onCheckedChange={(checked) => handleCategoryChange(category, checked as boolean)}
-              />
-              <Label htmlFor={category} className="text-sm font-normal">
-                {category}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Materials */}
-      <div>
-        <Label className="text-base font-semibold mb-4 block">Materials</Label>
-        <div className="space-y-3">
-          {materials.map((material) => (
-            <div key={material} className="flex items-center space-x-2">
-              <Checkbox
-                id={material}
-                checked={selectedMaterials.includes(material)}
-                onCheckedChange={(checked) => handleMaterialChange(material, checked as boolean)}
-              />
-              <Label htmlFor={material} className="text-sm font-normal">
-                {material}
-              </Label>
-            </div>
-          ))}
-        </div>
+        {loadingCategories ? (
+          <div className="flex items-center text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Loading categories...
+          </div>
+        ) : categoryError ? (
+          <p className="text-red-500 text-sm">Error loading categories.</p>
+        ) : categories.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No categories found.</p>
+        ) : (
+          <div className="space-y-3">
+            {categories.map((category) => (
+              <div key={category} className="flex items-center space-x-2">
+                <Checkbox
+                  id={category}
+                  checked={selectedCategories.includes(category)}
+                  onCheckedChange={(checked) =>
+                    handleCategoryChange(category, checked as boolean)
+                  }
+                />
+                <Label htmlFor={category} className="text-sm font-normal">
+                  {category}
+                </Label>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -169,8 +229,12 @@ export default function ShopPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h1 className="font-playfair text-4xl font-bold mb-2">Luxury Collection</h1>
-            <p className="text-muted-foreground">Discover our exquisite jewelry pieces</p>
+            <h1 className="font-playfair text-4xl font-bold mb-2">
+              Luxury Collection
+            </h1>
+            <p className="text-muted-foreground">
+              Discover our exquisite jewelry pieces
+            </p>
           </div>
 
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -240,17 +304,35 @@ export default function ShopPage() {
           <div className="flex-1">
             <div className="mb-6 flex justify-between items-center">
               <p className="text-muted-foreground">
-                Showing {products.length} of {products.length} products
+                Showing {products.length}{" "}
+                {products.length === 1 ? "product" : "products"}
               </p>
             </div>
 
-            {viewMode === "grid" ? (
+            {/* Loading, Error, and No Products States */}
+            {loadingProducts ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-gold" />
+                <span className="ml-2 text-gold">Loading products...</span>
+              </div>
+            ) : productError ? (
+              <div className="flex justify-center items-center h-64 text-red-500">
+                <p>Error: {productError}</p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="flex justify-center items-center h-64 text-muted-foreground">
+                <p>No products found matching your criteria.</p>
+              </div>
+            ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map((product) => (
-                  <Card key={product.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300">
+                  <Card
+                    key={product.id}
+                    className="group overflow-hidden hover:shadow-xl transition-all duration-300"
+                  >
                     <div className="relative">
                       <Image
-                        src={product.image || "/placeholder.svg"}
+                        src={product.image}
                         alt={product.name}
                         width={300}
                         height={300}
@@ -260,8 +342,12 @@ export default function ShopPage() {
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex flex-col gap-1">
                         {product.isNew && <Badge className="bg-green-500">New</Badge>}
-                        {product.isBestseller && <Badge className="bg-red-500">Bestseller</Badge>}
-                        {product.isLimited && <Badge className="bg-purple-500">Limited</Badge>}
+                        {product.isBestseller && (
+                          <Badge className="bg-red-500">Bestseller</Badge>
+                        )}
+                        {product.isLimited && (
+                          <Badge className="bg-purple-500">Limited</Badge>
+                        )}
                         {product.isSale && <Badge className="bg-orange-500">Sale</Badge>}
                       </div>
 
@@ -283,18 +369,24 @@ export default function ShopPage() {
                             <Star
                               key={i}
                               className={`h-3 w-3 ${
-                                i < Math.floor(product.rating) ? "fill-gold text-gold" : "text-gray-300"
+                                i < Math.floor(product.rating)
+                                  ? "fill-gold text-gold"
+                                  : "text-gray-300"
                               }`}
                             />
                           ))}
                         </div>
-                        <span className="text-xs text-muted-foreground ml-2">({product.reviews})</span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({product.reviews})
+                        </span>
                       </div>
 
                       <h3 className="font-semibold mb-2 line-clamp-2">{product.name}</h3>
 
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg font-bold text-gold">${product.price.toLocaleString()}</span>
+                        <span className="text-lg font-bold text-gold">
+                          ${product.price.toLocaleString()}
+                        </span>
                         {product.originalPrice && (
                           <span className="text-sm text-muted-foreground line-through">
                             ${product.originalPrice.toLocaleString()}
@@ -318,11 +410,14 @@ export default function ShopPage() {
             ) : (
               <div className="space-y-4">
                 {products.map((product) => (
-                  <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <Card
+                    key={product.id}
+                    className="overflow-hidden hover:shadow-lg transition-shadow"
+                  >
                     <div className="flex">
                       <div className="relative w-48 h-48 flex-shrink-0">
                         <Image
-                          src={product.image || "/placeholder.svg"}
+                          src={product.image}
                           alt={product.name}
                           fill
                           className="object-cover"
@@ -333,8 +428,12 @@ export default function ShopPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               {product.isNew && <Badge className="bg-green-500">New</Badge>}
-                              {product.isBestseller && <Badge className="bg-red-500">Bestseller</Badge>}
-                              {product.isLimited && <Badge className="bg-purple-500">Limited</Badge>}
+                              {product.isBestseller && (
+                                <Badge className="bg-red-500">Bestseller</Badge>
+                              )}
+                              {product.isLimited && (
+                                <Badge className="bg-purple-500">Limited</Badge>
+                              )}
                               {product.isSale && <Badge className="bg-orange-500">Sale</Badge>}
                             </div>
 
@@ -346,7 +445,9 @@ export default function ShopPage() {
                                   <Star
                                     key={i}
                                     className={`h-4 w-4 ${
-                                      i < Math.floor(product.rating) ? "fill-gold text-gold" : "text-gray-300"
+                                      i < Math.floor(product.rating)
+                                        ? "fill-gold text-gold"
+                                        : "text-gray-300"
                                     }`}
                                   />
                                 ))}
@@ -357,7 +458,9 @@ export default function ShopPage() {
                             </div>
 
                             <div className="flex items-center gap-3 mb-4">
-                              <span className="text-2xl font-bold text-gold">${product.price.toLocaleString()}</span>
+                              <span className="text-2xl font-bold text-gold">
+                                ${product.price.toLocaleString()}
+                              </span>
                               {product.originalPrice && (
                                 <span className="text-lg text-muted-foreground line-through">
                                   ${product.originalPrice.toLocaleString()}
@@ -387,19 +490,24 @@ export default function ShopPage() {
             )}
 
             {/* Pagination */}
-            <div className="flex justify-center mt-12">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" disabled>
-                  Previous
-                </Button>
-                <Button variant="default" className="bg-gold hover:bg-gold/90 text-black">
-                  1
-                </Button>
-                <Button variant="outline">2</Button>
-                <Button variant="outline">3</Button>
-                <Button variant="outline">Next</Button>
+            {!loadingProducts && products.length > 0 && (
+              <div className="flex justify-center mt-12">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" disabled>
+                    Previous
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="bg-gold hover:bg-gold/90 text-black"
+                  >
+                    1
+                  </Button>
+                  <Button variant="outline">2</Button>
+                  <Button variant="outline">3</Button>
+                  <Button variant="outline">Next</Button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

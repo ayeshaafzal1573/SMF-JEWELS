@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState} from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname ,useRouter} from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -31,6 +31,8 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+const router = useRouter()
+
 
   const navigation = [
     {
@@ -80,7 +82,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       current: pathname?.startsWith("/admin/settings"),
     },
   ]
+const handleLogout = async () => {
+  const token = localStorage.getItem("token")
+  if (!token) return
 
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    localStorage.removeItem("token")
+    router.push("/auth/login")
+  } catch (err) {
+    console.error("Logout failed", err)
+  }
+}
   return (
     <div className="flex h-screen bg-muted/30">
       {/* Desktop Sidebar */}
@@ -138,7 +157,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </ScrollArea>
 
         <div className="p-4 border-t">
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout}>
             <LogOut className="mr-3 h-5 w-5" />
             Logout
           </Button>
@@ -203,7 +222,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </ScrollArea>
 
           <div className="p-4 border-t">
-            <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+            <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout}>
               <LogOut className="mr-3 h-5 w-5" />
               Logout
             </Button>
@@ -224,10 +243,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <PlusCircle className="mr-2 h-4 w-4" />
               New Product
             </Button>
-            <Button size="sm" className="hidden sm:flex bg-gold hover:bg-gold/90 text-black">
-              <Sparkles className="mr-2 h-4 w-4" />
-              AI Generate
-            </Button>
+          
           </div>
         </header>
 
