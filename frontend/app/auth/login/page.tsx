@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Crown, Eye, EyeOff, Lock, Mail, ArrowRight } from "lucide-react"
-import { Header } from "@/components/header"
+import { useAuthStore } from "@/stores/useAuthStore"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"
+const { setToken } = useAuthStore()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,21 +43,16 @@ export default function LoginPage() {
 
       const data = await res.json()
 
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed")
-      }
+    
 
-      // Store token in localStorage or cookies
-     localStorage.setItem("token", data.access_token) // ✅ Correct
+    if (!res.ok) throw new Error(data.message || "Login failed")
 
-
-      // Assuming your API returns the user's role in the 'data' object
-      // For example, data.user.role or data.role
-      const userRole = data.role // Adjust this based on your API response structure
+localStorage.setItem("token", data.access_token)
+setToken(data.access_token)
+const userRole = data.role
 
       alert("Login successful! 🎉")
 
-      // Redirect based on role
       if (userRole === "admin") {
         router.push("/admin/dashboard") // Redirect to admin dashboard
       } else if (userRole === "user") {

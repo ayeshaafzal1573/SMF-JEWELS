@@ -12,7 +12,7 @@ def block_admin(user):
     return user
 
 
-@router.get("/")
+@router.get("/get-cart")
 async def get_cart(user: dict = Depends(get_current_user)):
     block_admin(user)
     return await get_user_cart(user["id"])
@@ -21,16 +21,20 @@ async def get_cart(user: dict = Depends(get_current_user)):
 @router.post("/")
 async def add_item(data: AddCartItem, user: dict = Depends(get_current_user)):
     block_admin(user)
-    return await add_to_cart(user["id"], data.dict())
+    await add_to_cart(user["id"], data.dict())
+    return await get_user_cart(user["id"])
 
 
 @router.put("/update-cart/{product_id}")
 async def update_item(product_id: str, data: UpdateCartItem, user: dict = Depends(get_current_user)):
     block_admin(user)
-    return await update_cart_item(user["id"], product_id, data.quantity)
-
+    await update_cart_item(user["id"], product_id, data.quantity)
+    return await get_user_cart(user["id"])
 
 @router.delete("/remove-from-cart/{product_id}")
 async def delete_item(product_id: str, user: dict = Depends(get_current_user)):
     block_admin(user)
-    return await remove_from_cart(user["id"], product_id)
+    await remove_from_cart(user["id"], product_id)
+    return await get_user_cart(user["id"])
+
+

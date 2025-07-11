@@ -31,7 +31,7 @@ import {
   Award,
   TrendingUp,
 } from "lucide-react"
-import { Header } from "../../components/header"
+import { Header } from "../../../components/header"
 
 // 3D Avatar Decoration
 function AvatarDecoration() {

@@ -25,7 +25,7 @@ import {
   Award,
   Clock,
 } from "lucide-react"
-import { Header } from "../../components/header"
+import { Header } from "../../../components/header"
 
 // 3D Gift Box Component
 function GiftBox3D({ isOpen }: { isOpen: boolean }) {

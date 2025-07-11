@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { AdminOnly } from "@/components/admin-only"
 import { useState} from "react"
 import Link from "next/link"
 import { usePathname ,useRouter} from "next/navigation"
@@ -95,12 +95,17 @@ const handleLogout = async () => {
     })
 
     localStorage.removeItem("token")
+    localStorage.removeItem("smf_jwt_token")
+    // Clear auth store state if using Zustand or similar
+    // useAuthStore.getState().logout()
+    // Redirect to login page
     router.push("/auth/login")
   } catch (err) {
     console.error("Logout failed", err)
   }
 }
   return (
+     <AdminOnly>
     <div className="flex h-screen bg-muted/30">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-card border-r">
@@ -251,5 +256,6 @@ const handleLogout = async () => {
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>
+    </AdminOnly>
   )
 }

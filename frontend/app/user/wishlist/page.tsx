@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Heart, Star, ShoppingBag, Trash2, Share2, ArrowRight, Filter, Grid, List } from "lucide-react"
 import Link from "next/link"
-import { Header } from "../../components/header"
+import { Header } from "../../../components/header"
 
 export default function WishlistPage() {
   const [cartCount, setCartCount] = useState(2)

@@ -22,7 +22,7 @@ import {
   Gift,
   Star,
 } from "lucide-react"
-import { Header } from "../../components/header"
+import { Header } from "../../../components/header"
 
 // 3D Credit Card Component
 function CreditCard3D({ cardNumber, cardName, expiryDate }: any) {

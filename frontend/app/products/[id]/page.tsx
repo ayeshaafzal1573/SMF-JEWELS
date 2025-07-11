@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Environment, Float } from "@react-three/drei"
@@ -26,7 +26,6 @@ import {
 import { Header } from "../../../components/header"
 import { useParams } from "next/navigation"
 
-// 3D Diamond Component
 function ProductDiamond() {
   return (
     <Float speed={1} rotationIntensity={0.5} floatIntensity={1}>
@@ -49,95 +48,168 @@ function ProductDiamond() {
 
 export default function ProductDetailPage() {
   const params = useParams()
+  const productId = params.id
   const [cartCount, setCartCount] = useState(2)
   const [wishlistCount, setWishlistCount] = useState(5)
-  const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedImage, setSelectedImage] = useState(1) // 0 for 3D view, 1+ for actual images
   const [quantity, setQuantity] = useState(1)
-  const [selectedSize, setSelectedSize] = useState("")
   const [isWishlisted, setIsWishlisted] = useState(false)
-  const [showAR, setShowAR] = useState(false)
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [relatedProducts, setRelatedProducts] = useState([]) // Initialize as empty array for API data
 
-  // Mock product data
-  const product = {
-    id: params.id,
-    name: "Eternal Diamond Solitaire Ring",
-    price: 4999,
-    originalPrice: 5999,
-    rating: 5,
-    reviews: 127,
-    description:
-      "A timeless classic featuring a brilliant-cut diamond in an elegant platinum setting. This solitaire ring represents the perfect union of traditional craftsmanship and contemporary design.",
-    images: [
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-    ],
-    badge: "Bestseller",
-    inStock: true,
-    sizes: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9"],
-    specifications: {
-      Metal: "Platinum 950",
-      "Diamond Carat": "1.5 ct",
-      "Diamond Cut": "Round Brilliant",
-      "Diamond Color": "D (Colorless)",
-      "Diamond Clarity": "VVS1",
-      "Setting Style": "Classic Solitaire",
-      "Band Width": "2.5mm",
-      Certificate: "GIA Certified",
-    },
-    features: [
-      "Lifetime warranty included",
-      "Free resizing within 60 days",
-      "Complimentary cleaning service",
-      "GIA certified diamond",
-      "Ethically sourced materials",
-    ],
-  }
-
-  const relatedProducts = [
-    {
-      id: 2,
-      name: "Classic Diamond Band",
-      price: 1299,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 5,
-    },
-    {
-      id: 3,
-      name: "Vintage Rose Gold Ring",
-      price: 2199,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 5,
-    },
-    {
-      id: 4,
-      name: "Emerald Cut Solitaire",
-      price: 5499,
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 5,
-    },
-  ]
-
-  const handleAddToCart = () => {
-    setCartCount(cartCount + quantity)
-  }
-
-  const handleWishlist = () => {
-    setIsWishlisted(!isWishlisted)
-    if (!isWishlisted) {
-      setWishlistCount(wishlistCount + 1)
-    } else {
-      setWishlistCount(wishlistCount - 1)
+  // --- API Integration: Fetch Product Data ---
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${productId}`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+        setProduct(data)
+        // Set initial selected image to the first actual image if available
+        if (data.images && data.images.length > 0) {
+          setSelectedImage(1) // Set to 1 to show the first image by default, not 3D view
+        }
+      } catch (e) {
+        console.error("Failed to fetch product:", e)
+        setError("Failed to load product details.")
+      } finally {
+        setLoading(false)
+      }
     }
+
+    if (productId) {
+      fetchProduct()
+    }
+  }, [productId]) // Re-run when productId changes
+
+  // --- API Integration: Fetch Related Products ---
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/all`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+        // Take the first 3 products as related products, or adjust logic as needed
+        setRelatedProducts(data.slice(0, 3))
+      } catch (e) {
+        console.error("Failed to fetch related products:", e)
+        // Optionally set an error state for related products
+      }
+    }
+    fetchRelatedProducts()
+  }, []) // Run once on component mount
+
+  // --- API Integration: Add to Cart ---
+  const handleAddToCart = async () => {
+    try {
+      // Replace with your actual API endpoint for adding to cart
+      const response = await fetch("/api/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Add any necessary authentication headers, e.g., 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: quantity
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      // Assuming the API returns the new cart count or success message
+      setCartCount(data.newCartCount || cartCount + quantity) // Update cart count from API response
+      alert("Product added to cart successfully!")
+    } catch (e) {
+      console.error("Failed to add to cart:", e)
+      alert("Failed to add product to cart.")
+    }
+  }
+
+  // --- API Integration: Add/Remove from Wishlist ---
+  const handleWishlist = async () => {
+    if (!product) return
+
+    const endpoint = isWishlisted ? "/api/wishlist/remove" : "/api/wishlist/add"
+    const method = isWishlisted ? "DELETE" : "POST"
+
+    try {
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          // Add any necessary authentication headers
+        },
+        body: JSON.stringify({ productId: product.id }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      // Assuming API returns updated wishlist status or count
+      setIsWishlisted(!isWishlisted)
+      setWishlistCount(isWishlisted ? wishlistCount - 1 : wishlistCount + 1)
+      alert(isWishlisted ? "Removed from wishlist." : "Added to wishlist!")
+    } catch (e) {
+      console.error("Failed to update wishlist:", e)
+      alert("Failed to update wishlist.")
+    }
+  }
+
+  // --- AR Experience Launcher (Placeholder) ---
+  const handleLaunchAR = () => {
+    alert("Launching AR Experience... (Integration with AR library/platform would go here!)")
+    // In a real application, you'd integrate with an AR SDK here,
+    // e.g., for WebXR, ARCore, ARKit, or a third-party AR platform.
+    // This might involve:
+    // - Checking for AR capabilities on the device.
+    // - Loading a 3D model specific to AR (e.g., glTF, USDZ).
+    // - Initiating an AR session to place the model in the real world.
+  }
+
+  // Show loading or error state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl text-gray-700">
+        Loading product details... 🚀
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl text-red-600">
+        Error: {error} ❌
+      </div>
+    )
+  }
+
+  // If product is null after loading (e.g., product not found)
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl text-gray-700">
+        Product not found. 🤷‍♀️
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
       <Header cartCount={cartCount} wishlistCount={wishlistCount} />
 
-      <div className="pt-24">
+      <div>
         {/* Product Section */}
         <section className="py-12">
           <div className="container mx-auto px-4">
@@ -153,28 +225,22 @@ export default function ProductDetailPage() {
                 >
                   <AnimatePresence mode="wait">
                     {selectedImage === 0 ? (
-                      <motion.div
-                        key="3d-viewer"
-                        className="w-full h-full"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                      >
-                        <Canvas camera={{ position: [0, 0, 8] }}>
-                          <ambientLight intensity={0.5} />
-                          <pointLight position={[10, 10, 10]} intensity={1} />
-                          <Environment preset="studio" />
-                          <ProductDiamond />
-                          <OrbitControls enableZoom={true} enablePan={false} autoRotate autoRotateSpeed={1} />
-                        </Canvas>
-                        <div className="absolute top-4 left-4 bg-[#D4AF37] text-[#111111] px-3 py-1 rounded-full text-sm font-bold">
-                          360° View
-                        </div>
-                      </motion.div>
+                   <motion.img
+                        key={`image-${selectedImage}`}
+                        // Adjusting index to correctly access product.images
+                        src={product.images[selectedImage - 1] || "/placeholder.svg"}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        initial={{ opacity: 0, scale: 1.1 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.5 }}
+                      />
                     ) : (
                       <motion.img
                         key={`image-${selectedImage}`}
-                        src={product.images[selectedImage - 1]}
+                        // Adjusting index to correctly access product.images
+                        src={product.images[selectedImage - 1] || "/placeholder.svg"}
                         alt={product.name}
                         className="w-full h-full object-cover"
                         initial={{ opacity: 0, scale: 1.1 }}
@@ -191,6 +257,7 @@ export default function ProductDetailPage() {
                       variant="ghost"
                       size="icon"
                       className="bg-white/80 hover:bg-white rounded-full shadow-lg"
+                      // Adjusted logic for navigating images, including 3D view (index 0)
                       onClick={() => setSelectedImage(selectedImage > 0 ? selectedImage - 1 : product.images.length)}
                     >
                       <ChevronLeft className="h-5 w-5" />
@@ -201,6 +268,7 @@ export default function ProductDetailPage() {
                       variant="ghost"
                       size="icon"
                       className="bg-white/80 hover:bg-white rounded-full shadow-lg"
+                      // Adjusted logic for navigating images, including 3D view (index 0)
                       onClick={() => setSelectedImage(selectedImage < product.images.length ? selectedImage + 1 : 0)}
                     >
                       <ChevronRight className="h-5 w-5" />
@@ -209,14 +277,7 @@ export default function ProductDetailPage() {
 
                   {/* Action Buttons */}
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="bg-white/80 hover:bg-white rounded-full shadow-lg"
-                      onClick={() => setShowAR(!showAR)}
-                    >
-                      <Camera className="h-5 w-5" />
-                    </Button>
+               
                     <Button variant="ghost" size="icon" className="bg-white/80 hover:bg-white rounded-full shadow-lg">
                       <ZoomIn className="h-5 w-5" />
                     </Button>
@@ -228,18 +289,7 @@ export default function ProductDetailPage() {
 
                 {/* Thumbnail Gallery */}
                 <div className="flex gap-4 overflow-x-auto pb-2">
-                  <motion.button
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                      selectedImage === 0 ? "border-[#D4AF37]" : "border-gray-200"
-                    }`}
-                    onClick={() => setSelectedImage(0)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="w-full h-full bg-[#D4AF37]/10 flex items-center justify-center">
-                      <RotateCcw className="h-6 w-6 text-[#D4AF37]" />
-                    </div>
-                  </motion.button>
+                
                   {product.images.map((image, index) => (
                     <motion.button
                       key={index}
@@ -259,22 +309,7 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
 
-                {/* AR Try-On */}
-                <AnimatePresence>
-                  {showAR && (
-                    <motion.div
-                      className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl p-6 text-center"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                    >
-                      <Camera className="h-12 w-12 text-[#D4AF37] mx-auto mb-4" />
-                      <h3 className="text-xl font-bold text-[#111111] mb-2">AR Try-On Experience</h3>
-                      <p className="text-gray-600 mb-4">See how this ring looks on your hand using augmented reality</p>
-                      <Button className="bg-[#D4AF37] hover:bg-yellow-600 text-[#111111]">Launch AR Experience</Button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              
               </div>
 
               {/* Product Info */}
@@ -304,47 +339,13 @@ export default function ProductDetailPage() {
                   </h1>
 
                   <div className="flex items-center gap-4 mb-6">
-                    <span className="text-4xl font-bold text-[#D4AF37]">${product.price.toLocaleString()}</span>
-                    {product.originalPrice && (
-                      <span className="text-2xl text-gray-400 line-through">
-                        ${product.originalPrice.toLocaleString()}
-                      </span>
-                    )}
-                    <Badge variant="secondary" className="text-green-600 bg-green-50">
-                      Save ${(product.originalPrice! - product.price).toLocaleString()}
-                    </Badge>
+                    <span className="text-4xl font-bold text-[#D4AF37]">Rs: {product.price.toLocaleString()}</span>
+
                   </div>
 
                   <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p>
                 </div>
 
-                {/* Size Selection */}
-                <div>
-                  <h3 className="text-lg font-semibold text-[#111111] mb-4">Ring Size</h3>
-                  <div className="grid grid-cols-5 gap-3">
-                    {product.sizes.map((size) => (
-                      <motion.button
-                        key={size}
-                        className={`py-3 px-4 border-2 rounded-lg font-semibold transition-all duration-300 ${
-                          selectedSize === size
-                            ? "border-[#D4AF37] bg-[#D4AF37] text-white"
-                            : "border-gray-200 hover:border-[#D4AF37] hover:text-[#D4AF37]"
-                        }`}
-                        onClick={() => setSelectedSize(size)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {size}
-                      </motion.button>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Need help finding your size?{" "}
-                    <a href="#" className="text-[#D4AF37] hover:underline">
-                      Size Guide
-                    </a>
-                  </p>
-                </div>
 
                 {/* Quantity */}
                 <div>
@@ -374,7 +375,6 @@ export default function ProductDetailPage() {
                     <Button
                       className="flex-1 bg-gradient-to-r from-[#D4AF37] to-yellow-500 hover:from-yellow-500 hover:to-[#D4AF37] text-[#111111] py-4 text-lg font-bold rounded-full transition-all duration-500 shadow-xl hover:shadow-2xl"
                       onClick={handleAddToCart}
-                      disabled={!selectedSize}
                     >
                       <ShoppingBag className="mr-3 h-5 w-5" />
                       Add to Cart
@@ -393,12 +393,7 @@ export default function ProductDetailPage() {
                     </Button>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent"
-                  >
-                    Schedule Private Viewing
-                  </Button>
+
                 </div>
 
                 {/* Features */}
@@ -420,82 +415,12 @@ export default function ProductDetailPage() {
         </section>
 
         {/* Product Details Tabs */}
-        <section className="py-16 bg-[#F5F5F5]">
+        <section className="py-2">
           <div className="container mx-auto px-4">
-            <Tabs defaultValue="specifications" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-8">
-                <TabsTrigger value="specifications">Specifications</TabsTrigger>
-                <TabsTrigger value="features">Features</TabsTrigger>
-                <TabsTrigger value="care">Care Guide</TabsTrigger>
+            <Tabs defaultValue="reviews" className="w-full">
+              <TabsList className="grid w-full grid-cols-12 mb-8">
                 <TabsTrigger value="reviews">Reviews</TabsTrigger>
               </TabsList>
-
-              <TabsContent value="specifications">
-                <Card className="p-8">
-                  <h3
-                    className="text-2xl font-bold text-[#111111] mb-6"
-                    style={{ fontFamily: "Playfair Display, serif" }}
-                  >
-                    Technical Specifications
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between items-center py-3 border-b border-gray-200">
-                        <span className="font-semibold text-gray-700">{key}:</span>
-                        <span className="text-[#111111]">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="features">
-                <Card className="p-8">
-                  <h3
-                    className="text-2xl font-bold text-[#111111] mb-6"
-                    style={{ fontFamily: "Playfair Display, serif" }}
-                  >
-                    Premium Features
-                  </h3>
-                  <div className="space-y-4">
-                    {product.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-4">
-                        <div className="w-2 h-2 bg-[#D4AF37] rounded-full"></div>
-                        <span className="text-gray-700">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="care">
-                <Card className="p-8">
-                  <h3
-                    className="text-2xl font-bold text-[#111111] mb-6"
-                    style={{ fontFamily: "Playfair Display, serif" }}
-                  >
-                    Jewelry Care Instructions
-                  </h3>
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="font-semibold text-[#111111] mb-2">Daily Care</h4>
-                      <p className="text-gray-600">
-                        Remove jewelry before swimming, exercising, or using cleaning products.
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-[#111111] mb-2">Cleaning</h4>
-                      <p className="text-gray-600">
-                        Clean with warm soapy water and a soft brush. Professional cleaning recommended every 6 months.
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-[#111111] mb-2">Storage</h4>
-                      <p className="text-gray-600">Store in a soft pouch or jewelry box to prevent scratching.</p>
-                    </div>
-                  </div>
-                </Card>
-              </TabsContent>
 
               <TabsContent value="reviews">
                 <Card className="p-8">
@@ -573,7 +498,7 @@ export default function ProductDetailPage() {
                   <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
                     <div className="relative overflow-hidden">
                       <img
-                        src={product.image || "/placeholder.svg"}
+                        src={product.images?.[0] || "/placeholder.svg"} // Use first image from product.images array
                         alt={product.name}
                         className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                       />

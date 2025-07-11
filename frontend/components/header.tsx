@@ -75,7 +75,7 @@ export function Header() {
 
           {/* Wishlist */}
           <Button variant="ghost" size="icon" className="relative hover:bg-gold/10" asChild>
-            <Link href="/wishlist">
+            <Link href="/user/wishlist">
               <Heart className="h-4 w-4" />
               {wishlistCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-gold text-black">
@@ -87,7 +87,7 @@ export function Header() {
 
           {/* Cart */}
           <Button variant="ghost" size="icon" className="relative hover:bg-gold/10" asChild>
-            <Link href="/cart">
+            <Link href="/user/cart">
               <ShoppingCart className="h-4 w-4" />
               {cartCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-gold text-black">
