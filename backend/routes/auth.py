@@ -34,14 +34,13 @@ async def signup(user: UserCreate):
     created_user = await db.users.find_one({"_id": result.inserted_id})
     return user_helper(created_user)
 
-
 @router.post("/login")
 async def login(form_data: UserLogin):
     user = await db.users.find_one({"email": form_data.email})
     if not user or not verify_password(form_data.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    role = user.get("role", "user")  # Default to "user" if role not set
+    role = user.get("role", "user")
 
     token = create_access_token({
         "id": str(user["_id"]),
@@ -52,8 +51,10 @@ async def login(form_data: UserLogin):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "role": role  # <-- This line is important for frontend logic
+        "role": role,
+        "user_id": str(user["_id"])  # Added here
     }
+
 @router.post("/logout")
 async def logout(request: Request, user=Depends(get_current_user)):
     auth_header = request.headers.get("authorization")

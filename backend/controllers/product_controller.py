@@ -55,4 +55,16 @@ async def get_all_products():
 async def get_product_by_id(product_id: str):
     if not ObjectId.is_valid(product_id):
         return None
-    return await db.products.find_one({"_id": ObjectId(product_id)})
+
+    product = await db.products.find_one({"_id": ObjectId(product_id)})
+
+    if not product:
+        return None
+
+    category_id = product.get("category")
+    if category_id and ObjectId.is_valid(str(category_id)):
+        category = await db.categories.find_one({"_id": ObjectId(category_id)})
+        if category:
+            product["category"] = category
+
+    return product  # Return raw product

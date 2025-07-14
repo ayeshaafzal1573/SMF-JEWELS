@@ -157,7 +157,9 @@ async def list_products():
 
 @router.get("/{product_id}", response_model=ProductResponse)
 async def view_product(product_id: str):
+    print("Received product_id:", product_id)  # Or use logger.info
     product = await get_product_by_id(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product_helper(product)
+

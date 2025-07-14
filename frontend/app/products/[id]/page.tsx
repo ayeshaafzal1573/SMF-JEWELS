@@ -1,13 +1,15 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Canvas } from "@react-three/fiber"
-import { OrbitControls, Environment, Float } from "@react-three/drei"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useCartStore } from "@/stores/useCartStore";
+import { toast } from "react-hot-toast";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Environment, Float } from "@react-three/drei";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Heart,
   Star,
@@ -17,175 +19,162 @@ import {
   Shield,
   RotateCcw,
   ZoomIn,
-  Camera,
   ChevronLeft,
   ChevronRight,
   Plus,
   Minus,
-} from "lucide-react"
-import { Header } from "../../../components/header"
-import { useParams } from "next/navigation"
+} from "lucide-react";
+import { Header } from "../../../components/header";
+import { useParams } from "next/navigation";
 
-function ProductDiamond() {
-  return (
-    <Float speed={1} rotationIntensity={0.5} floatIntensity={1}>
-      <mesh scale={[2, 2, 2]}>
-        <octahedronGeometry args={[1, 2]} />
-        <meshPhysicalMaterial
-          color="#ffffff"
-          metalness={0.1}
-          roughness={0}
-          transmission={0.9}
-          thickness={0.5}
-          envMapIntensity={2}
-          clearcoat={1}
-          clearcoatRoughness={0}
-        />
-      </mesh>
-    </Float>
-  )
-}
 
 export default function ProductDetailPage() {
-  const params = useParams()
-  const productId = params.id
-  const [cartCount, setCartCount] = useState(2)
-  const [wishlistCount, setWishlistCount] = useState(5)
-  const [selectedImage, setSelectedImage] = useState(1) // 0 for 3D view, 1+ for actual images
-  const [quantity, setQuantity] = useState(1)
-  const [isWishlisted, setIsWishlisted] = useState(false)
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [relatedProducts, setRelatedProducts] = useState([]) // Initialize as empty array for API data
+  const params = useParams();
+  const productId = params.id;
+  const [cartCount, setCartCount] = useState(2);
+  const [wishlistCount, setWishlistCount] = useState(5);
+  const [selectedImage, setSelectedImage] = useState(1);
+  const [quantity, setQuantity] = useState(1);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
-  // --- API Integration: Fetch Product Data ---
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${productId}`)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        const data = await response.json()
-        setProduct(data)
-        // Set initial selected image to the first actual image if available
+    console.log("Current product state:", product);
+  }, [product]);
+
+ useEffect(() => {
+  let isMounted = true;
+  const fetchProduct = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${productId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Fetched product:", data);
+      const productData = { ...data, id: data._id || productId };
+      if (isMounted) {
+        setProduct(productData);
+        console.log("Set product state:", productData);
         if (data.images && data.images.length > 0) {
-          setSelectedImage(1) // Set to 1 to show the first image by default, not 3D view
+          setSelectedImage(1);
         }
-      } catch (e) {
-        console.error("Failed to fetch product:", e)
-        setError("Failed to load product details.")
-      } finally {
-        setLoading(false)
+      }
+    } catch (e) {
+      console.error("Failed to fetch product:", e);
+      if (isMounted) {
+        setError("Failed to load product details.");
+      }
+    } finally {
+      if (isMounted) {
+        setLoading(false);
       }
     }
+  };
 
-    if (productId) {
-      fetchProduct()
-    }
-  }, [productId]) // Re-run when productId changes
+  if (productId) {
+    fetchProduct();
+  }
 
-  // --- API Integration: Fetch Related Products ---
+  return () => {
+    isMounted = false;
+  };
+}, [productId]);
   useEffect(() => {
     const fetchRelatedProducts = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/all`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/all`);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json()
-        // Take the first 3 products as related products, or adjust logic as needed
-        setRelatedProducts(data.slice(0, 3))
+        const data = await response.json();
+        setRelatedProducts(data.slice(0, 3));
       } catch (e) {
-        console.error("Failed to fetch related products:", e)
-        // Optionally set an error state for related products
+        console.error("Failed to fetch related products:", e);
       }
-    }
-    fetchRelatedProducts()
-  }, []) // Run once on component mount
+    };
+    fetchRelatedProducts();
+  }, []);
 
-  // --- API Integration: Add to Cart ---
-  const handleAddToCart = async () => {
+  const handleAddToCart = useCallback(async () => {
+    console.log("Product state before validation:", product);
+    if (!product || !product.id) {
+      toast.error("Invalid product data: missing product or product ID");
+      console.log("Invalid product data:", { product });
+      return;
+    }
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("user_id");
+    console.log("Auth details:", { token, userId });
+    if (!token || !userId) {
+      toast.error("Please log in to add items to cart");
+      return;
+    }
     try {
-      // Replace with your actual API endpoint for adding to cart
-      const response = await fetch("/api/cart/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Add any necessary authentication headers, e.g., 'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          productId: product.id,
-          quantity: quantity
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      // Assuming the API returns the new cart count or success message
-      setCartCount(data.newCartCount || cartCount + quantity) // Update cart count from API response
-      alert("Product added to cart successfully!")
+     await useCartStore.getState().addToCart({
+  product_id: product._id,  // Instead of product.id if product._id exists
+  quantity: quantity,
+  name: product.name,
+  price: product.price,
+  image: product.images?.[0] || "/placeholder.svg",
+  inStock: product.stock > 0,
+});
+      console.log("Item added to cart successfully");
+      setCartCount((prev) => prev + quantity);
+      toast.success("Item added to cart");
     } catch (e) {
-      console.error("Failed to add to cart:", e)
-      alert("Failed to add product to cart.")
+      console.error("Failed to add to cart:", e);
+      toast.error("Failed to add to cart");
     }
-  }
+  }, [product, quantity]);
 
-  // --- API Integration: Add/Remove from Wishlist ---
   const handleWishlist = async () => {
-    if (!product) return
-
-    const endpoint = isWishlisted ? "/api/wishlist/remove" : "/api/wishlist/add"
-    const method = isWishlisted ? "DELETE" : "POST"
+    if (!product || !product.id) {
+      toast.error("Invalid product data");
+      return;
+    }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in to manage wishlist");
+      return;
+    }
+    const endpoint = isWishlisted ? "/api/wishlist/remove" : "/api/wishlist/add";
+    const method = isWishlisted ? "DELETE" : "POST";
 
     try {
       const response = await fetch(endpoint, {
         method: method,
         headers: {
           "Content-Type": "application/json",
-          // Add any necessary authentication headers
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ productId: product.id }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Assuming API returns updated wishlist status or count
-      setIsWishlisted(!isWishlisted)
-      setWishlistCount(isWishlisted ? wishlistCount - 1 : wishlistCount + 1)
-      alert(isWishlisted ? "Removed from wishlist." : "Added to wishlist!")
+      setIsWishlisted(!isWishlisted);
+      setWishlistCount(isWishlisted ? wishlistCount - 1 : wishlistCount + 1);
+      toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
     } catch (e) {
-      console.error("Failed to update wishlist:", e)
-      alert("Failed to update wishlist.")
+      console.error("Failed to update wishlist:", e);
+      toast.error("Failed to update wishlist");
     }
-  }
+  };
 
-  // --- AR Experience Launcher (Placeholder) ---
-  const handleLaunchAR = () => {
-    alert("Launching AR Experience... (Integration with AR library/platform would go here!)")
-    // In a real application, you'd integrate with an AR SDK here,
-    // e.g., for WebXR, ARCore, ARKit, or a third-party AR platform.
-    // This might involve:
-    // - Checking for AR capabilities on the device.
-    // - Loading a 3D model specific to AR (e.g., glTF, USDZ).
-    // - Initiating an AR session to place the model in the real world.
-  }
-
-  // Show loading or error state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-xl text-gray-700">
         Loading product details... 🚀
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -193,30 +182,25 @@ export default function ProductDetailPage() {
       <div className="min-h-screen flex items-center justify-center text-xl text-red-600">
         Error: {error} ❌
       </div>
-    )
+    );
   }
 
-  // If product is null after loading (e.g., product not found)
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center text-xl text-gray-700">
         Product not found. 🤷‍♀️
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
       <Header cartCount={cartCount} wishlistCount={wishlistCount} />
-
       <div>
-        {/* Product Section */}
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-              {/* Product Images & 3D Viewer */}
               <div className="space-y-6">
-                {/* Main Image/3D Viewer */}
                 <motion.div
                   className="relative aspect-square bg-[#F5F5F5] rounded-2xl overflow-hidden"
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -225,21 +209,22 @@ export default function ProductDetailPage() {
                 >
                   <AnimatePresence mode="wait">
                     {selectedImage === 0 ? (
-                   <motion.img
-                        key={`image-${selectedImage}`}
-                        // Adjusting index to correctly access product.images
-                        src={product.images[selectedImage - 1] || "/placeholder.svg"}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
+                      <motion.div
+                        key="3d-view"
                         initial={{ opacity: 0, scale: 1.1 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ duration: 0.5 }}
-                      />
+                      >
+                        <Canvas>
+                        
+                          <OrbitControls />
+                          <Environment preset="studio" />
+                        </Canvas>
+                      </motion.div>
                     ) : (
                       <motion.img
                         key={`image-${selectedImage}`}
-                        // Adjusting index to correctly access product.images
                         src={product.images[selectedImage - 1] || "/placeholder.svg"}
                         alt={product.name}
                         className="w-full h-full object-cover"
@@ -251,13 +236,11 @@ export default function ProductDetailPage() {
                     )}
                   </AnimatePresence>
 
-                  {/* Image Navigation */}
                   <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="bg-white/80 hover:bg-white rounded-full shadow-lg"
-                      // Adjusted logic for navigating images, including 3D view (index 0)
                       onClick={() => setSelectedImage(selectedImage > 0 ? selectedImage - 1 : product.images.length)}
                     >
                       <ChevronLeft className="h-5 w-5" />
@@ -268,16 +251,13 @@ export default function ProductDetailPage() {
                       variant="ghost"
                       size="icon"
                       className="bg-white/80 hover:bg-white rounded-full shadow-lg"
-                      // Adjusted logic for navigating images, including 3D view (index 0)
                       onClick={() => setSelectedImage(selectedImage < product.images.length ? selectedImage + 1 : 0)}
                     >
                       <ChevronRight className="h-5 w-5" />
                     </Button>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
-               
                     <Button variant="ghost" size="icon" className="bg-white/80 hover:bg-white rounded-full shadow-lg">
                       <ZoomIn className="h-5 w-5" />
                     </Button>
@@ -287,9 +267,22 @@ export default function ProductDetailPage() {
                   </div>
                 </motion.div>
 
-                {/* Thumbnail Gallery */}
                 <div className="flex gap-4 overflow-x-auto pb-2">
-                
+                  <motion.button
+                    key="3d-view"
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                      selectedImage === 0 ? "border-[#D4AF37]" : "border-gray-200"
+                    }`}
+                    onClick={() => setSelectedImage(0)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <img
+                      src="/3d-placeholder.svg"
+                      alt="3D View"
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.button>
                   {product.images.map((image, index) => (
                     <motion.button
                       key={index}
@@ -308,26 +301,24 @@ export default function ProductDetailPage() {
                     </motion.button>
                   ))}
                 </div>
-
-              
               </div>
 
-              {/* Product Info */}
               <motion.div
                 className="space-y-8"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                {/* Header */}
                 <div>
                   <div className="flex items-center gap-4 mb-4">
-                    <Badge className="bg-[#D4AF37] text-[#111111] font-bold">{product.badge}</Badge>
+                    <Badge className="bg-[#D4AF37] text-[#111111] font-bold">
+                      {product.category?.name === "Uncategorized" ? "Jewelry" : product.category?.name}
+                    </Badge>
                     <div className="flex items-center">
-                      {[...Array(product.rating)].map((_, i) => (
+                      {[...Array(product.rating || 5)].map((_, i) => (
                         <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />
                       ))}
-                      <span className="ml-2 text-sm text-gray-600">({product.reviews} reviews)</span>
+                      <span className="ml-2 text-sm text-gray-600">({product.reviews || 0} reviews)</span>
                     </div>
                   </div>
 
@@ -339,15 +330,12 @@ export default function ProductDetailPage() {
                   </h1>
 
                   <div className="flex items-center gap-4 mb-6">
-                    <span className="text-4xl font-bold text-[#D4AF37]">Rs: {product.price.toLocaleString()}</span>
-
+                    <span className="text-4xl font-bold text-[#D4AF37]">${product.price.toLocaleString()}</span>
                   </div>
 
                   <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p>
                 </div>
 
-
-                {/* Quantity */}
                 <div>
                   <h3 className="text-lg font-semibold text-[#111111] mb-4">Quantity</h3>
                   <div className="flex items-center gap-4">
@@ -365,16 +353,16 @@ export default function ProductDetailPage() {
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <span className="text-sm text-gray-600">{product.inStock ? "In Stock" : "Out of Stock"}</span>
+                    <span className="text-sm text-gray-600">{product.stock > 0 ? "In Stock" : "Out of Stock"}</span>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="space-y-4">
                   <div className="flex gap-4">
                     <Button
                       className="flex-1 bg-gradient-to-r from-[#D4AF37] to-yellow-500 hover:from-yellow-500 hover:to-[#D4AF37] text-[#111111] py-4 text-lg font-bold rounded-full transition-all duration-500 shadow-xl hover:shadow-2xl"
                       onClick={handleAddToCart}
+                      disabled={product.stock <= 0}
                     >
                       <ShoppingBag className="mr-3 h-5 w-5" />
                       Add to Cart
@@ -392,11 +380,8 @@ export default function ProductDetailPage() {
                       <Heart className={`h-6 w-6 ${isWishlisted ? "fill-current" : ""}`} />
                     </Button>
                   </div>
-
-
                 </div>
 
-                {/* Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
                     { icon: Truck, text: "Free Shipping" },
@@ -414,7 +399,6 @@ export default function ProductDetailPage() {
           </div>
         </section>
 
-        {/* Product Details Tabs */}
         <section className="py-2">
           <div className="container mx-auto px-4">
             <Tabs defaultValue="reviews" className="w-full">
@@ -468,7 +452,6 @@ export default function ProductDetailPage() {
           </div>
         </section>
 
-        {/* Related Products */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <motion.div
@@ -487,7 +470,7 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {relatedProducts.map((product, index) => (
                 <motion.div
-                  key={product.id}
+                  key={product.id || index}
                   className="group cursor-pointer"
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -498,7 +481,7 @@ export default function ProductDetailPage() {
                   <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
                     <div className="relative overflow-hidden">
                       <img
-                        src={product.images?.[0] || "/placeholder.svg"} // Use first image from product.images array
+                        src={product.images?.[0] || "/placeholder.svg"}
                         alt={product.name}
                         className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -515,7 +498,7 @@ export default function ProductDetailPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-bold text-[#D4AF37]">${product.price.toLocaleString()}</span>
                         <div className="flex">
-                          {[...Array(product.rating)].map((_, i) => (
+                          {[...Array(product.rating || 5)].map((_, i) => (
                             <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />
                           ))}
                         </div>
@@ -529,5 +512,5 @@ export default function ProductDetailPage() {
         </section>
       </div>
     </div>
-  )
+  );
 }
