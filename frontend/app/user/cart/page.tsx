@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,6 @@ import {
   ShoppingBag,
   Truck,
   Shield,
-  ArrowRight,
-  Gift,
   Percent,
   CreditCard,
   Lock,
@@ -23,7 +21,10 @@ import {
 import Link from "next/link";
 import { Header } from "../../../components/header";
 import { useCartStore } from "@/stores/useCartStore";
+import { useWishlistStore } from "@/stores/useWishlistStore";
+
 import Image from "next/image";
+import { toast } from "react-hot-toast";
 
 export default function CartPage() {
   const {
@@ -33,15 +34,21 @@ export default function CartPage() {
     updateCartItem,
     removeFromCart,
   } = useCartStore();
-  
+
   const [promoCode, setPromoCode] = useState("");
   const [wishlistCount, setWishlistCount] = useState(5);
 
+const { addToWishlist } = useWishlistStore();
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
-  const updateQuantity = (productId: string, newQuantity: number) => {
+  const updateQuantity = (productId: string | undefined, newQuantity: number) => {
+    if (!productId) {
+      console.error("Product ID is missing");
+      toast.error("Product ID is missing. Cannot update cart item.");
+      return;
+    }
     if (newQuantity <= 0) {
       removeFromCart(productId);
       return;
@@ -49,16 +56,16 @@ export default function CartPage() {
     updateCartItem(productId, newQuantity);
   };
 
-  // Safely calculate cart totals
+  // Calculate cart totals
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + (Number(item.product?.price) || 0) * (item.quantity || 1),
+    (sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1),
     0
   );
-  
+
   const savings = cartItems.reduce(
     (sum, item) => {
-      const originalPrice = Number(item.product?.originalPrice) || Number(item.product?.price) || 0;
-      const currentPrice = Number(item.product?.price) || 0;
+      const originalPrice = Number(item.originalPrice) || Number(item.price) || 0;
+      const currentPrice = Number(item.price) || 0;
       return sum + (originalPrice - currentPrice) * (item.quantity || 1);
     },
     0
@@ -86,10 +93,19 @@ export default function CartPage() {
     </motion.div>
   );
 
-  const moveToWishlist = (productId: string) => {
-    removeFromCart(productId);
-    setWishlistCount(wishlistCount + 1);
-  };
+const moveToWishlist = (productId: string) => {
+  const product = cartItems.find(item => item.product_id === productId);
+
+  if (!product) {
+    toast.error("Product not found in cart.");
+    return;
+  }
+
+  addToWishlist(product);
+  removeFromCart(productId);
+  toast.success("Moved to wishlist!");
+};
+
 
   if (isLoading) {
     return (
@@ -103,8 +119,7 @@ export default function CartPage() {
     <div className="min-h-screen bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
       <Header cartCount={cartItems.length} wishlistCount={wishlistCount} />
 
-      <div className="pt-24">
-        {/* Header */}
+      <div>
         <section className="py-12 bg-[#F5F5F5]">
           <div className="container mx-auto px-4">
             <motion.div
@@ -129,12 +144,11 @@ export default function CartPage() {
           <section className="py-12">
             <div className="container mx-auto px-4">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                {/* Cart Items Column */}
                 <div className="lg:col-span-2 space-y-6">
                   <AnimatePresence>
                     {cartItems.map((item, index) => {
-                      const productPrice = Number(item.product?.price) || 0;
-                      const originalPrice = Number(item.product?.originalPrice) || productPrice;
+                      const productPrice = Number(item.price) || 0;
+                      const originalPrice = Number(item.originalPrice) || productPrice;
                       const isOnSale = originalPrice > productPrice;
 
                       return (
@@ -149,11 +163,10 @@ export default function CartPage() {
                         >
                           <Card className="p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-0">
                             <div className="flex gap-6">
-                              {/* Product Image */}
                               <div className="relative w-32 h-32">
                                 <Image
-                                  src={item.product?.images?.[0] || "/placeholder.svg"}
-                                  alt={item.product?.name || "Product"}
+                                  src={item.image || "/placeholder.svg"}
+                                  alt={item.name || "Product"}
                                   fill
                                   className="object-cover rounded-lg"
                                 />
@@ -164,31 +177,29 @@ export default function CartPage() {
                                 )}
                               </div>
 
-                              {/* Product Details */}
                               <div className="flex-1">
                                 <div className="flex justify-between items-start mb-4">
                                   <div>
                                     <h3 className="text-xl font-bold text-[#111111] mb-2">
-                                      {item.product?.name || "Product"}
+                                      {item.name || "Product"}
                                     </h3>
                                     {item.size && <p className="text-gray-600">Size: {item.size}</p>}
                                     <div className="flex items-center gap-2 mt-2">
                                       <span className="text-2xl font-bold text-[#D4AF37]">
-                                        ${productPrice.toLocaleString()}
+                                        ${productPrice.toFixed(2)}
                                       </span>
                                       {isOnSale && (
                                         <span className="text-lg text-gray-400 line-through">
-                                          ${originalPrice.toLocaleString()}
+                                          ${originalPrice.toFixed(2)}
                                         </span>
                                       )}
                                     </div>
                                   </div>
 
-                                  {/* Actions */}
                                   <div className="flex gap-2">
                                     <motion.button
                                       className="p-2 text-gray-400 hover:text-[#D4AF37] transition-colors"
-                                      onClick={() => moveToWishlist(item.id)}
+                                      onClick={() => moveToWishlist(item.product_id)}
                                       whileHover={{ scale: 1.1 }}
                                       whileTap={{ scale: 0.9 }}
                                     >
@@ -196,7 +207,7 @@ export default function CartPage() {
                                     </motion.button>
                                     <motion.button
                                       className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                      onClick={() => removeFromCart(item.id)}
+                                      onClick={() => removeFromCart(item.product_id)}
                                       whileHover={{ scale: 1.1 }}
                                       whileTap={{ scale: 0.9 }}
                                     >
@@ -205,13 +216,13 @@ export default function CartPage() {
                                   </div>
                                 </div>
 
-                                {/* Quantity Controls */}
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center border border-gray-200 rounded-lg">
                                     <Button
+                                      type="button"
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                      onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                                       className="h-10 w-10"
                                       disabled={item.quantity <= 1}
                                     >
@@ -221,9 +232,10 @@ export default function CartPage() {
                                       {item.quantity}
                                     </span>
                                     <Button
+                                      type="button"
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                      onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                                       className="h-10 w-10"
                                       disabled={item.inStock === false}
                                     >
@@ -234,12 +246,11 @@ export default function CartPage() {
                                   <div className="text-right">
                                     <p className="text-sm text-gray-600">Subtotal</p>
                                     <p className="text-xl font-bold text-[#111111]">
-                                      ${(productPrice * item.quantity).toLocaleString()}
+                                      ${(productPrice * item.quantity).toFixed(2)}
                                     </p>
                                   </div>
                                 </div>
 
-                                {/* Stock Status */}
                                 {item.inStock !== undefined && (
                                   <div className="mt-4">
                                     <div className="flex items-center gap-2">
@@ -266,7 +277,6 @@ export default function CartPage() {
                     })}
                   </AnimatePresence>
 
-                  {/* Promo Code */}
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -293,7 +303,6 @@ export default function CartPage() {
                   </motion.div>
                 </div>
 
-                {/* Order Summary */}
                 <motion.div
                   className="lg:col-span-1"
                   initial={{ opacity: 0, x: 50 }}
@@ -312,19 +321,19 @@ export default function CartPage() {
                       <div className="space-y-4 mb-6">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Subtotal</span>
-                          <span className="font-semibold">${subtotal.toLocaleString()}</span>
+                          <span className="font-semibold">${subtotal.toFixed(2)}</span>
                         </div>
 
                         {savings > 0 && (
                           <div className="flex justify-between text-green-600">
                             <span>Savings</span>
-                            <span className="font-semibold">-${savings.toLocaleString()}</span>
+                            <span className="font-semibold">-${savings.toFixed(2)}</span>
                           </div>
                         )}
 
                         <div className="flex justify-between">
                           <span className="text-gray-600">Shipping</span>
-                          <span className="font-semibold">{shipping === 0 ? "FREE" : `$${shipping}`}</span>
+                          <span className="font-semibold">{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</span>
                         </div>
 
                         <div className="flex justify-between">
@@ -386,31 +395,6 @@ export default function CartPage() {
                       </div>
                     </Card>
 
-                    {/* Gift Options */}
-                    <Card className="p-6 border-0 shadow-lg">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Gift className="h-6 w-6 text-[#D4AF37]" />
-                        <h3 className="text-lg font-semibold text-[#111111]">Gift Options</h3>
-                      </div>
-                      <div className="space-y-3">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300 text-[#D4AF37] focus:ring-[#D4AF37]"
-                          />
-                          <span className="text-gray-700">Gift wrapping (+$25)</span>
-                        </label>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300 text-[#D4AF37] focus:ring-[#D4AF37]"
-                          />
-                          <span className="text-gray-700">Include gift message</span>
-                        </label>
-                      </div>
-                    </Card>
-
-                    {/* Security Features */}
                     <Card className="p-6 border-0 shadow-lg bg-[#F5F5F5]">
                       <h3 className="text-lg font-semibold text-[#111111] mb-4">Why Shop With Us</h3>
                       <div className="space-y-3">

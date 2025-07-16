@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react";
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,59 +15,35 @@ export default function WishlistPage() {
   const [wishlistCount, setWishlistCount] = useState(5)
   const [viewMode, setViewMode] = useState("grid")
   const [sortBy, setSortBy] = useState("newest")
-  const [wishlistItems, setWishlistItems] = useState([
-    {
-      id: 1,
-      name: "Eternal Diamond Solitaire Ring",
-      price: 4999,
-      originalPrice: 5999,
-      image: "/placeholder.svg?height=400&width=400",
-      badge: "Bestseller",
-      rating: 5,
-      inStock: true,
-      dateAdded: "2024-01-15",
-    },
-    {
-      id: 2,
-      name: "Royal Pearl Collection Necklace",
-      price: 2499,
-      image: "/placeholder.svg?height=400&width=400",
-      badge: "New",
-      rating: 5,
-      inStock: true,
-      dateAdded: "2024-01-10",
-    },
-    {
-      id: 3,
-      name: "Vintage Rose Gold Ring",
-      price: 2199,
-      image: "/placeholder.svg?height=400&width=400",
-      badge: "Heritage",
-      rating: 5,
-      inStock: false,
-      dateAdded: "2024-01-08",
-    },
-    {
-      id: 4,
-      name: "Diamond Tennis Bracelet",
-      price: 1899,
-      image: "/placeholder.svg?height=400&width=400",
-      badge: "Popular",
-      rating: 4,
-      inStock: true,
-      dateAdded: "2024-01-05",
-    },
-    {
-      id: 5,
-      name: "Emerald Cut Engagement Ring",
-      price: 5499,
-      image: "/placeholder.svg?height=400&width=400",
-      badge: "Luxury",
-      rating: 5,
-      inStock: true,
-      dateAdded: "2024-01-01",
-    },
-  ])
+const [wishlistItems, setWishlistItems] = useState([]);
+
+
+useEffect(() => {
+  const fetchWishlist = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/wishlist/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch wishlist");
+
+      const data = await res.json();
+
+      // Assuming data is an array of wishlist items from backend:
+      setWishlistItems(data);
+      setWishlistCount(data.length);
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+    }
+  };
+
+  fetchWishlist();
+}, []);
 
   const removeFromWishlist = (id: number) => {
     setWishlistItems(wishlistItems.filter((item) => item.id !== id))
@@ -115,7 +92,7 @@ export default function WishlistPage() {
     <div className="min-h-screen bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
       <Header cartCount={cartCount} wishlistCount={wishlistCount} />
 
-      <div className="pt-24">
+      <div>
         {/* Header */}
         <section className="py-12 bg-gradient-to-br from-[#111111] via-gray-900 to-[#111111] text-white">
           <div className="container mx-auto px-4">
@@ -225,8 +202,8 @@ export default function WishlistPage() {
                         >
                           <div className={`relative overflow-hidden ${viewMode === "list" ? "w-1/3" : ""}`}>
                             <motion.img
-                              src={item.image}
-                              alt={item.name}
+                            src={item.images?.[0]}
+  alt={item.name}
                               className={`object-cover ${viewMode === "list" ? "w-full h-64" : "w-full h-80"}`}
                               whileHover={{ scale: 1.1 }}
                               transition={{ duration: 0.5 }}
@@ -236,13 +213,7 @@ export default function WishlistPage() {
                               {item.badge}
                             </Badge>
 
-                            {!item.inStock && (
-                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <Badge variant="destructive" className="text-lg px-4 py-2">
-                                  Out of Stock
-                                </Badge>
-                              </div>
-                            )}
+                         
 
                             {/* Action Buttons */}
                             <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -310,17 +281,17 @@ export default function WishlistPage() {
                             <div className={`space-y-3 ${viewMode === "list" ? "flex flex-col justify-end" : ""}`}>
                               <motion.button
                                 className={`w-full py-3 rounded-full font-bold transition-all duration-500 ${
-                                  item.inStock
+                                  item.stock
                                     ? "bg-gradient-to-r from-[#D4AF37] to-yellow-500 hover:from-yellow-500 hover:to-[#D4AF37] text-[#111111] shadow-lg hover:shadow-xl"
                                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                                 }`}
-                                onClick={() => item.inStock && moveToCart(item.id)}
-                                disabled={!item.inStock}
-                                whileHover={item.inStock ? { scale: 1.02 } : {}}
-                                whileTap={item.inStock ? { scale: 0.98 } : {}}
+                                onClick={() => item.stock && moveToCart(item.id)}
+                                disabled={!item.stock}
+                                whileHover={item.stock ? { scale: 1.02 } : {}}
+                                whileTap={item.stock ? { scale: 0.98 } : {}}
                               >
                                 <ShoppingBag className="mr-2 h-5 w-5 inline" />
-                                {item.inStock ? "Move to Cart" : "Out of Stock"}
+                                {item.stock ? "Move to Cart" : "Out of Stock"}
                               </motion.button>
 
                               <Link href={`/products/${item.id}`}>
@@ -333,9 +304,7 @@ export default function WishlistPage() {
                               </Link>
                             </div>
 
-                            <div className="mt-4 text-sm text-gray-500">
-                              Added {new Date(item.dateAdded).toLocaleDateString()}
-                            </div>
+                          
                           </CardContent>
                         </Card>
                       </motion.div>
@@ -366,10 +335,10 @@ export default function WishlistPage() {
                     <Button
                       className="bg-gradient-to-r from-[#D4AF37] to-yellow-500 hover:from-yellow-500 hover:to-[#D4AF37] text-[#111111] px-8 py-3 text-lg font-bold rounded-full flex-1"
                       onClick={() => {
-                        const inStockItems = wishlistItems.filter((item) => item.inStock)
-                        setCartCount(cartCount + inStockItems.length)
-                        setWishlistItems(wishlistItems.filter((item) => !item.inStock))
-                        setWishlistCount(wishlistItems.filter((item) => !item.inStock).length)
+                        const stockItems = wishlistItems.filter((item) => item.stock)
+                        setCartCount(cartCount + stockItems.length)
+                        setWishlistItems(wishlistItems.filter((item) => !item.stock))
+                        setWishlistCount(wishlistItems.filter((item) => !item.stock).length)
                       }}
                     >
                       <ShoppingBag className="mr-2 h-5 w-5" />
@@ -394,103 +363,7 @@ export default function WishlistPage() {
           </>
         )}
 
-        {/* Recommended Products */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="text-center mb-12"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl font-bold text-[#111111] mb-4" style={{ fontFamily: "Playfair Display, serif" }}>
-                You Might Also Love
-              </h2>
-              <p className="text-xl text-gray-600">Discover more pieces that match your style</p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              {[
-                {
-                  id: 6,
-                  name: "Classic Pearl Earrings",
-                  price: 599,
-                  image: "/placeholder.svg?height=300&width=300",
-                  rating: 5,
-                },
-                {
-                  id: 7,
-                  name: "Gold Chain Bracelet",
-                  price: 799,
-                  image: "/placeholder.svg?height=300&width=300",
-                  rating: 4,
-                },
-                {
-                  id: 8,
-                  name: "Sapphire Pendant",
-                  price: 1299,
-                  image: "/placeholder.svg?height=300&width=300",
-                  rating: 5,
-                },
-                {
-                  id: 9,
-                  name: "Diamond Stud Earrings",
-                  price: 899,
-                  image: "/placeholder.svg?height=300&width=300",
-                  rating: 5,
-                },
-              ].map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  className="group cursor-pointer"
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -10 }}
-                >
-                  <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden bg-white">
-                    <div className="relative overflow-hidden">
-                      <motion.img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-64 object-cover"
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.5 }}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-4 right-4 bg-white/80 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        onClick={() => setWishlistCount(wishlistCount + 1)}
-                      >
-                        <Heart className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    <CardContent className="p-6">
-                      <h3 className="font-bold text-lg text-[#111111] mb-2">{product.name}</h3>
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-2xl font-bold text-[#D4AF37]">${product.price.toLocaleString()}</span>
-                        <div className="flex">
-                          {[...Array(product.rating)].map((_, i) => (
-                            <Star key={i} className="h-4 w-4 fill-[#D4AF37] text-[#D4AF37]" />
-                          ))}
-                        </div>
-                      </div>
-                      <Button
-                        className="w-full bg-[#111111] hover:bg-[#D4AF37] text-white hover:text-[#111111] py-3 rounded-full font-bold transition-all duration-300"
-                        onClick={() => setCartCount(cartCount + 1)}
-                      >
-                        Add to Cart
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+      
       </div>
     </div>
   )

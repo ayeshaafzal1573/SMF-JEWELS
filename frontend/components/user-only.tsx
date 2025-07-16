@@ -1,5 +1,6 @@
 "use client"
 
+import Loading from "@/app/loading";
 import { useAuthStore } from "@/stores/useAuthStore"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -22,7 +23,8 @@ export function UserOnly({ children }: { children: React.ReactNode }) {
   }, [user, hydrated]);
 
   if (loading || !hydrated) {
-    return <div className="min-h-screen flex items-center justify-center text-lg">Checking user access...</div>;
+    return 
+    <Loading/ >
   }
 
   return <>{children}</>;

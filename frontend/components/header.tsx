@@ -7,13 +7,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useCartStore } from "@/stores/useCartStore";
+import { useWishlistStore } from "@/stores/useWishlistStore";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, ShoppingCart, Heart, User, Menu, Sun, Moon, Sparkles } from "lucide-react";
 
 export function Header() {
   const { theme, setTheme } = useTheme()
-  const [cartCount] = useState(2)
-  const [wishlistCount] = useState(5)
+   const { cartItems } = useCartStore();
+  const { wishlistItems } = useWishlistStore();
+    const cartCount = cartItems.length;
+  const wishlistCount = wishlistItems.length;
+
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -77,11 +83,14 @@ export function Header() {
           <Button variant="ghost" size="icon" className="relative hover:bg-gold/10" asChild>
             <Link href="/user/wishlist">
               <Heart className="h-4 w-4" />
-              {wishlistCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-gold text-black">
-                  {wishlistCount}
-                </Badge>
-              )}
+             
+  {wishlistCount > 0 && (
+    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-gold text-black">
+   
+       <p className="absolute left-1"> {wishlistCount}</p> 
+        </Badge>
+  )}
+
             </Link>
           </Button>
 
@@ -89,11 +98,12 @@ export function Header() {
           <Button variant="ghost" size="icon" className="relative hover:bg-gold/10" asChild>
             <Link href="/user/cart">
               <ShoppingCart className="h-4 w-4" />
-              {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-gold text-black">
-                  {cartCount}
-                </Badge>
-              )}
+               {cartCount > 0 && (
+    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-gold text-black">
+       <p className="absolute left-1">{cartCount}</p>  
+    </Badge>
+  )}
+
             </Link>
           </Button>
 
